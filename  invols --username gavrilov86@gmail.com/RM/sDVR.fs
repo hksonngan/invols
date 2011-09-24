@@ -1,30 +1,4 @@
-#define steps_num 3
-#define steps_up 6
 
-//#define USE_BOUNDING_MESH 1
-
-void SingleStep()
-{
-
-}
-vec3 CalcNormByDist(vec3 ps,vec3 ray,int otr)
-{
-	vec2 pixx = vec2(0.2)/vec2(screen_width,screen_height);
-	
-	float d0 = texture2D(front_dist_txt,text_coord)[otr];
-	float d1 = texture2D(front_dist_txt,text_coord+vec2(pixx.x,0.0))[otr];
-	float d2 = texture2D(front_dist_txt,text_coord+vec2(0.0,pixx.y))[otr];
-	
-	//vec3 ray0 = nav + 0.4142 * (left * (text_coord.x*2.0-1.0)*(pixx.y/pixx.x) + top * (text_coord.y*2.0-1.0));
-	vec3 ray1 = nav + 0.4142 * (left * (text_coord.x*2.0-1.0+pixx.x)*(pixx.y/pixx.x) + top * (text_coord.y*2.0-1.0));
-	vec3 ray2 = nav + 0.4142 * (left * (text_coord.x*2.0-1.0)*(pixx.y/pixx.x) + top * (text_coord.y*2.0-1.0+pixx.y));
-	vec3 pt = ps + normalize(ray)*d0;
-	vec3 v1 = ps + normalize(ray1)*d1-pt;
-	vec3 v2 = ps + normalize(ray2)*d2-pt;
-
-	return -normalize(cross(v1,v2));
-
-}
 
 void main()
 {
@@ -89,10 +63,11 @@ void main()
 			ps = ps0 + step*(start/step_length);
 		
 			ps = ps + step*(1.0+rand(vec4(vertex,ps.w)));
+			id=0;
 			while(ps.w <final)
 			{
 			
-				for(id=0;id<$VD_NUMBER;id++)
+				//for(id=0;id<$VD_NUMBER;id++)
 				//if(inter[id])
 
 				{
@@ -120,16 +95,16 @@ void main()
 						color = color + d_alpha * cl.xyz;
 						
 						alpha = alpha + d_alpha;
-						if(d_alpha>0.0)break;
+						if(alpha>0.95)
+						{
+							alpha=1.0;
+							break;
+						}
 					}
 					
 						
 				}
-				if(alpha>0.95)
-				{
-					alpha=1.0;
-					break;
-				}
+				
 				
 				
 				ps += step;

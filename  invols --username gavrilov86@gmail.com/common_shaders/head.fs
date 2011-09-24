@@ -25,9 +25,9 @@ uniform vec3 cs_center[$VD_NUMBER];
 uniform vec3 cs_x[$VD_NUMBER];
 uniform vec3 cs_y[$VD_NUMBER];
 uniform vec3 cs_z[$VD_NUMBER];
-uniform sampler3D f_text[$VD_NUMBER];
-uniform sampler3D f_text_i[$VD_NUMBER];
-uniform sampler3D f_text_tf[$VD_NUMBER];
+uniform sampler3D f_text;
+uniform sampler3D f_text_i;
+uniform sampler3D f_text_tf;
 uniform float opacity[$VD_NUMBER];
 uniform int IsoLast[$VD_NUMBER];
 uniform int QuadLast[$VD_NUMBER];
@@ -121,7 +121,7 @@ vec3 ToTextureSpace1(vec3 ps,int id)
 float FastEqu(vec3 arg,int id)
 {
 	vec3 coord=ToTextureSpace(arg,id);
-	return texture3D(f_text[id], coord).x;
+	return texture3D(f_text, coord).x;
 }
 float Equ(vec3 arg,int id)
 {
@@ -129,9 +129,9 @@ float Equ(vec3 arg,int id)
 	if(coord==clamp(coord,vec3(0.01),vec3(0.99)))
 	{
 		#if $use_cubic_filt==0
-			return texture3D(f_text[id], coord).x;
+			return texture3D(f_text, coord).x;
 		#else
-			return interpolate_cubic(f_text[id],coord,cell_size[id]);
+			return interpolate_cubic(f_text,coord,cell_size[id]);
 		#endif
 	}
 	else
@@ -143,9 +143,9 @@ float EquTF(vec3 arg,int id)
 	if(coord==clamp(coord,vec3(0.0),vec3(1.0)))
 	{
 		#if $use_cubic_filt==0
-			return texture3D(f_text_tf[id], coord).x;
+			return texture3D(f_text_tf, coord).x;
 		#else
-			return interpolate_cubic(f_text_tf[id],coord,vec3(1.0/256.0));
+			return interpolate_cubic(f_text_tf,coord,vec3(1.0/256.0));
 		#endif
 	}
 	else
@@ -158,9 +158,9 @@ vec2 Equ2(vec3 arg,int id)
 	if(coord==clamp(coord,vec3(0.0),vec3(1.0)))
 	{
 		#if $use_cubic_filt==0
-			return vec2(texture3D(f_text[id], coord).x,texture3D(f_text_tf[id], coord).x);
+			return vec2(texture3D(f_text, coord).x,texture3D(f_text_tf[id], coord).x);
 		#else
-			return vec2(interpolate_cubic(f_text[id],coord,cell_size[id]),interpolate_cubic(f_text_tf[id],coord,vec3(1.0/256.0)));
+			return vec2(interpolate_cubic(f_text,coord,cell_size[id]),interpolate_cubic(f_text_tf[id],coord,vec3(1.0/256.0)));
 		#endif
 	}
 	else
@@ -171,7 +171,7 @@ float EquI(vec3 arg,int id)
 {
 	vec3 coord=ToTextureSpace(arg,id);
 	if(coord==clamp(coord,vec3(0.0),vec3(1.0)))
-		return texture3D(f_text_i[id], coord).y;
+		return texture3D(f_text_i, coord).y;
 	else
 		return 0.0;
 }

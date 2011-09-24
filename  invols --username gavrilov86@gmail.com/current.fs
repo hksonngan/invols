@@ -12,19 +12,19 @@ uniform float screen_height;
 uniform vec3 RFrom;
 uniform vec3 GFrom;
 uniform vec3 BFrom;
-uniform float max_level[0],min_level[0];
-uniform vec3 cell_size[0];
-uniform vec3 cs_center[0];
-uniform vec3 cs_x[0];
-uniform vec3 cs_y[0];
-uniform vec3 cs_z[0];
-uniform sampler3D f_text[0];
-uniform sampler3D f_text_i[0];
-uniform sampler3D f_text_tf[0];
-uniform float opacity[0];
-uniform int IsoLast[0];
-uniform int QuadLast[0];
-uniform vec2 tf_ww[0];
+uniform float max_level[1],min_level[1];
+uniform vec3 cell_size[1];
+uniform vec3 cs_center[1];
+uniform vec3 cs_x[1];
+uniform vec3 cs_y[1];
+uniform vec3 cs_z[1];
+uniform sampler3D f_text;
+uniform sampler3D f_text_i;
+uniform sampler3D f_text_tf;
+uniform float opacity[1];
+uniform int IsoLast[1];
+uniform int QuadLast[1];
+uniform vec2 tf_ww[1];
 uniform vec3 LightDir;
 uniform sampler2D txt_level_color;
 uniform sampler2D front_dist_txt;
@@ -102,7 +102,7 @@ vec3 ToTextureSpace1(vec3 ps,int id)
 float FastEqu(vec3 arg,int id)
 {
 	vec3 coord=ToTextureSpace(arg,id);
-	return texture3D(f_text[id], coord).x;
+	return texture3D(f_text, coord).x;
 }
 float Equ(vec3 arg,int id)
 {
@@ -110,9 +110,9 @@ float Equ(vec3 arg,int id)
 	if(coord==clamp(coord,vec3(0.01),vec3(0.99)))
 	{
 		#if 0==0
-			return texture3D(f_text[id], coord).x;
+			return texture3D(f_text, coord).x;
 		#else
-			return interpolate_cubic(f_text[id],coord,cell_size[id]);
+			return interpolate_cubic(f_text,coord,cell_size[id]);
 		#endif
 	}
 	else
@@ -124,9 +124,9 @@ float EquTF(vec3 arg,int id)
 	if(coord==clamp(coord,vec3(0.0),vec3(1.0)))
 	{
 		#if 0==0
-			return texture3D(f_text_tf[id], coord).x;
+			return texture3D(f_text_tf, coord).x;
 		#else
-			return interpolate_cubic(f_text_tf[id],coord,vec3(1.0/256.0));
+			return interpolate_cubic(f_text_tf,coord,vec3(1.0/256.0));
 		#endif
 	}
 	else
@@ -139,9 +139,9 @@ vec2 Equ2(vec3 arg,int id)
 	if(coord==clamp(coord,vec3(0.0),vec3(1.0)))
 	{
 		#if 0==0
-			return vec2(texture3D(f_text[id], coord).x,texture3D(f_text_tf[id], coord).x);
+			return vec2(texture3D(f_text, coord).x,texture3D(f_text_tf[id], coord).x);
 		#else
-			return vec2(interpolate_cubic(f_text[id],coord,cell_size[id]),interpolate_cubic(f_text_tf[id],coord,vec3(1.0/256.0)));
+			return vec2(interpolate_cubic(f_text,coord,cell_size[id]),interpolate_cubic(f_text_tf[id],coord,vec3(1.0/256.0)));
 		#endif
 	}
 	else
@@ -152,7 +152,7 @@ float EquI(vec3 arg,int id)
 {
 	vec3 coord=ToTextureSpace(arg,id);
 	if(coord==clamp(coord,vec3(0.0),vec3(1.0)))
-		return texture3D(f_text_i[id], coord).y;
+		return texture3D(f_text_i, coord).y;
 	else
 		return 0.0;
 }
@@ -233,14 +233,14 @@ void main()
 #endif
 	float start=1000.0,final=0.0;
 	int id;
-	//vec2 livetime[0];
-	bool inter[0];
+	//vec2 livetime[1];
+	bool inter[1];
 	vec3 color = vec3(0.0),norm;
 	vec4 step  = vec4(ray*step_length,step_length);
 	float ddd=step_length*1500.0;
 	float alpha = 0.0,s,f;
-	float e[0],e0[0];
-	for(id=0;id<0;id++)
+	float e[1],e0[1];
+	for(id=0;id<1;id++)
 	{
 		e[id] = 0.0;
 		inter[id] = IntersectBox (ToTextureSpace(ps.xyz,id), ToTextureSpace1(ray,id),vec3(0.0),vec3(1.0), s,f );
@@ -284,7 +284,7 @@ void main()
 			{
 				int cur_quad=0;
 			
-				for(id=0;id<0;id++)
+				for(id=0;id<1;id++)
 				{
 					e[id] = Equ(ps.xyz,id);
 					for(;cur_quad<=QuadLast[id];cur_quad++)

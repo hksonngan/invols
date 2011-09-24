@@ -15,6 +15,8 @@ public:
 	void Allocate(ivec3 n_size);
 	void Clear();
 	
+	void SwapWith(VData vd);
+
 	void SetValue(short val,ivec3 id);
 	void SetValue(short val,int i,int j,int k);
 	short GetValue(ivec3 id);

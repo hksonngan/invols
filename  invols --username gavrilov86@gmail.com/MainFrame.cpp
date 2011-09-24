@@ -39,6 +39,7 @@ BEGIN_EVENT_TABLE(MainFrame, wxFrame)
 	EVT_MENU(MYACT_SHOW_ALL_TOOLS, MainFrame::OnShowAllTools)
 	EVT_MENU(MYACT_LOAD_DEF_PER, MainFrame::OnLoadDefaultPerspective)
 	EVT_MENU(MYACT_APPLY_MEDIAN_FILTER, MainFrame::OnApplyMedianFilter)
+	EVT_MENU(MYACT_APPLY_GAUSS_FILTER, MainFrame::OnApplyGaussFilter)
 	EVT_MENU(MYACT_APPLY_RESAMPLING, MainFrame::OnApplyResampling)
 	EVT_MENU(MYACT_SAVE_VD, MainFrame::OnSaveVD)
 	EVT_MENU(MYACT_LOAD_VD, MainFrame::OnLoadVD)
@@ -590,11 +591,19 @@ void MainFrame::OnLoadDefaultPerspective(wxCommandEvent& event)
 
 void MainFrame::OnApplyMedianFilter(wxCommandEvent& event)
 {
-//	segmentation::MedianFilter();
+	segmentation::MedianFilter(CPU_VD::full_data);
+	if(auto_gpu_upload)	OnLoadToGPU(event);
+	Update_(1);
+}
+void MainFrame::OnApplyGaussFilter(wxCommandEvent& event)
+{
+	segmentation::GaussFilter(CPU_VD::full_data);
+	if(auto_gpu_upload)	OnLoadToGPU(event);
+	Update_(1);
 }
 void MainFrame::OnApplyResampling(wxCommandEvent& event)
 {
-//	segmentation::Resample();
+	segmentation::Resample();
 }
 
 void MainFrame::LoadProfile(wxString fname)

@@ -41,6 +41,7 @@ enum
  MYACT_LOAD_TO_GPU,
  MYACT_SWITCH_PROJECTION,
  MYACT_APPLY_MEDIAN_FILTER,
+ MYACT_APPLY_GAUSS_FILTER,
  MYACT_APPLY_RESAMPLING,
 
  MYACT_LIGHT_TO_CAMERA,
@@ -98,6 +99,7 @@ public:
 	
 	void OnDropShadows(wxCommandEvent& event);
 	void OnApplyMedianFilter(wxCommandEvent& event);
+	void OnApplyGaussFilter(wxCommandEvent& event);
 	void OnApplyResampling(wxCommandEvent& event);
 	void OnGoHome(wxCommandEvent& event);
 	void OnSaveVD(wxCommandEvent& event);

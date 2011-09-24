@@ -31,6 +31,12 @@ void VData::Clear()
 	
 
 }
+void VData::SwapWith(VData vd)
+{
+	swap(spacing,vd.spacing);
+	swap(dt,vd.dt);
+	swap(size,vd.size);
+}
 short VData::GetValue(ivec3 id)
 {
 	return *(dt[id.z]+id.x+id.y*size.x);

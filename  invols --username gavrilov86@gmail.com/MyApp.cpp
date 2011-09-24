@@ -63,15 +63,14 @@ bool MyApp::OnInit()
 	fileMenu->Append(MYACT_LOAD_DEF_PER, _T(MY_TXT("Load defallt perspective","Расположить окна по умолчанию")));
     menuBar->Append(fileMenu, _T(MY_TXT("Windows","&Окна")));
     frame->SetMenuBar(menuBar);
-/*
+
 	fileMenu = new wxMenu;
-	fileMenu->Append(MYACT_SAVE_VD, _T(MY_TXT("Save in *.bin","Сохранить в *.bin")));
-	fileMenu->Append(MYACT_LOAD_VD, _T(MY_TXT("Load *.bin","Загрузить *.bin")));
-//	fileMenu->Append(MYACT_APPLY_MEDIAN_FILTER, _T(MY_TXT("Median filter","Медианный фильтр")));
-//	fileMenu->Append(MYACT_APPLY_RESAMPLING, _T(MY_TXT("Resample","Изменить разрешение")));
-    menuBar->Append(fileMenu, _T(MY_TXT("Volume data","Объёмные данные")));
+	fileMenu->Append(MYACT_APPLY_MEDIAN_FILTER, _T(MY_TXT("Median filter","Медианный фильтр")));
+	fileMenu->Append(MYACT_APPLY_GAUSS_FILTER, _T(MY_TXT("Gaussian filter","Фильтр Гаусса")));
+	//fileMenu->Append(MYACT_APPLY_RESAMPLING, _T(MY_TXT("Resample","Изменить разрешение")));
+    menuBar->Append(fileMenu, _T(MY_TXT("Data processing","Обработка данных")));
     frame->SetMenuBar(menuBar);
-*/
+
 
     fileMenu = new wxMenu;
 	fileMenu->Append(MYACT_ABOUT, _T(MY_TXT("About","О программе...")));

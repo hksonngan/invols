@@ -273,7 +273,8 @@ void Render::_ReLoadShader()
 	
 	str::AddPair(repl,"$IsoNum",str::ToString(rm->isos_sum));
 	str::AddPair(repl,"$QuadNum",str::ToString(rm->quads_sum));
-	str::AddPair(repl,"$VD_NUMBER",str::ToString(CT::GetVolumesNumber()));
+	//str::AddPair(repl,"$VD_NUMBER",str::ToString(CT::GetVolumesNumber()));
+	str::AddPair(repl,"$VD_NUMBER","1");
 	str::AddPair(repl,"$use_accel_struct",rm->use_accel_struct?"1":"0");
 	str::AddPair(repl,"$use_cubic_filt",rm->use_cubic_filt?"1":"0");
 	str::AddPair(repl,"$drop_shadows",rm->drop_shadows?"1":"0");
@@ -542,9 +543,15 @@ vec3 box2 = b2;
 		ivec3 size1 = CT::GetData(i)->GetSize();
 		vec3 cell_size(1.0f/size1.x,1.0f/size1.y,1.0f/size1.z);
 		ps->SetVar1("cell_size"+idd,cell_size);
-		ps->SetVar1("f_text"+idd,CT::GetData(i)->SetDataTextureID(VD_TXT_ID+i));
-		ps->SetVar1("f_text_tf"+idd,CT::GetTFData(i)->SetDataTextureID(I_TXT_ID+i));
+		//ps->SetVar1("f_text"+idd,CT::GetData(i)->SetDataTextureID(VD_TXT_ID+i));
+		//ps->SetVar1("f_text_tf"+idd,CT::GetTFData(i)->SetDataTextureID(I_TXT_ID+i));
 	}
+	if(CT::GetData(0)->IsLoaded())
+	{
+		ps->SetVar1("f_text",CT::GetData(0)->SetDataTextureID(VD_TXT_ID));
+		//ps->SetVar1("f_text_tf",CT::GetTFData(0)->SetDataTextureID(I_TXT_ID));
+	}
+
 	ps->SetVar1("front_dist_txt", rtt_SetID(FRONT_FACE_TXT_ID,rtt_GetTexture(1)));
 	ps->SetVar1("back_dist_txt", rtt_SetID(BACK_FACE_TXT_ID,rtt_GetTexture(2)));
 	

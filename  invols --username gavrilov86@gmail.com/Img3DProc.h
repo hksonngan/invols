@@ -94,23 +94,15 @@ struct DataStat
 	short MinValue,MaxValue;
 	double MidValue;
 };
-/*
+
 namespace segmentation
 {
-	void Init();
-	void UnInit();
 
-	void Mark(ivec3 point,BYTE val);
-	void UnMarkAll();
-	void MarkBB(BYTE val);
-	void MakeSegmentation();
-
-	void MedianFilter();
+	void MedianFilter(VData vd);
+	void GaussFilter(VData vd);
 	void Resample();
 
-	extern BYTE* region;
 }
-*/
 extern DataStat data_stat;
 extern Histogram histogram;
 

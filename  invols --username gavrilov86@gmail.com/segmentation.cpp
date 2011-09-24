@@ -232,151 +232,32 @@ glDeleteTextures (1,&texture);
 
 	CT::Update_rtt();
 }
-/*
+
 namespace segmentation
 {
-	ivec3 b1, b2;
-
-	
-	inline int GetID(const ivec3&id)
-	{
-		return id.x + size.x*(id.y + size.y*id.z);
-	}
-	int deepness;
-	bool need_rep;
-	
-	void SprCell(ivec3 seed)
-	{
-		int id = GetID(seed);
-		short val = data[id];
-		if(val>=min && val<=max) 
-			data[id] = 20000 ;
-		else return;
-
-		deepness++;
-		if(	deepness<100)
-		{
-			if(seed.x>b1.x) SprCell(ivec3(seed.x-1,seed.y,seed.z));
-			if(seed.x<b2.x) SprCell(ivec3(seed.x+1,seed.y,seed.z));
-			if(seed.y>b1.y) SprCell(ivec3(seed.x,seed.y-1,seed.z));
-			if(seed.y<b2.y) SprCell(ivec3(seed.x,seed.y+1,seed.z));
-			if(seed.z>b1.z) SprCell(ivec3(seed.x,seed.y,seed.z-1));
-			if(seed.z<b2.z) SprCell(ivec3(seed.x,seed.y,seed.z+1));
-
-		}else need_rep=1;
-
-		deepness--;
-	}
-	
-
-	void Init()
-	{
-		if(region)delete[]region;
-		size = CPU_VD::full_data.GetSize();
-		data = CPU_VD::full_data;
-		region = new BYTE[size.x*size.y*size.z];
-	}
-	void UnInit()
-	{
-		if(region)delete[]region;
-	}
-
-	void update_bb()
-	{
-		b1 = (CT::iso->GetBoundingBox(0)*CPU_VD::full_data.GetSize().ToVec3()).ToIVec3();
-		b2 = (CT::iso->GetBoundingBox(1)*CPU_VD::full_data.GetSize().ToVec3()).ToIVec3();
-	}
-	void Mark(ivec3 point,BYTE val)
-	{
-		update_bb();
-		if(point==ivec3::Clamp(b1,b2,point))
-			region[GetID(point)] = val;
-	}
-	void UnMarkAll()
-	{
-		memset(region,0,size.x*size.y*size.z);
-	}
-	void MarkBB(BYTE val)
-	{
-		ivec3 seed;
-		update_bb();
-
-		for(seed.x=b1.x;seed.x<=b2.x;seed.x++)
-		for(seed.y=b1.y;seed.y<=b2.y;seed.y++)
-		for(seed.z=b1.z;seed.z<=b2.z;seed.z++)
-		{
-			region[GetID(seed)] = val;
-		}
-	}
-
-	void MakeSegmentation()
-	{
-		ivec3 seed;
-		update_bb();
-		min = 70-data_stat.MinValue;
-		max = 100-data_stat.MinValue;
-		
-
-		for(seed.x=b1.x;seed.x<=b2.x;seed.x++)
-		for(seed.y=b1.y;seed.y<=b2.y;seed.y++)
-		for(seed.z=b1.z;seed.z<=b2.z;seed.z++)
-		{
-			
-			if(region[GetID(seed)])
-			{
-				if(seed.x>b1.x) SprCell(ivec3(seed.x-1,seed.y,seed.z));
-				if(seed.x<b2.x) SprCell(ivec3(seed.x+1,seed.y,seed.z));
-				if(seed.y>b1.y) SprCell(ivec3(seed.x,seed.y-1,seed.z));
-				if(seed.y<b2.y) SprCell(ivec3(seed.x,seed.y+1,seed.z));
-				if(seed.z>b1.z) SprCell(ivec3(seed.x,seed.y,seed.z-1));
-				if(seed.z<b2.z) SprCell(ivec3(seed.x,seed.y,seed.z+1));
-			}
-		}
-	}
-
 	void Resample()
 	{
-		update_bb();
 
-		ivec3 sub_size = b2-b1;
-		ivec3 pos = b1;
-//		sub_size = ivec3::Min(sub_size,size);
-		short*sub_data = GetSubData(CPU_VD::full_data,CPU_VD::full_data.GetSize(),pos,sub_size);
-
-
-		ivec3 nsize(512);
-		nsize.x = wxGetNumberFromUser( "New size.x",_T("Enter a number (1..512):"), _T("Numeric input"),512, 1, 512);
-		nsize.y = wxGetNumberFromUser( "New size.y",_T("Enter a number (1..512):"), _T("Numeric input"),512, 1, 512);
-		nsize.z = wxGetNumberFromUser( "New size.z",_T("Enter a number (1..512):"), _T("Numeric input"),512, 1, 512);
-
-		short*res_data = new short[nsize.x*nsize.y*nsize.z];
-		ApplyFilter1(sub_data,sub_size,res_data,nsize,GL_UNSIGNED_SHORT,"Proc/cubic_resampling.fs");
-		delete[] CPU_VD::full_data;
-		if(sub_size.x!=512)delete[] sub_data;
-		CPU_VD::full_data = res_data;
-		CPU_VD::full_data.GetSize() = nsize;
 
 	}
 
 
 
-	void MedianFilter()
+	void MedianFilter(VData vd)
 	{
-		long kernel_radius = wxGetNumberFromUser( "Enter the kernel radius",
-										_T("Enter a number:"), _T("Numeric input"),
-										1, 1, 10, 0 );
-		update_bb();
+		VData tmp_vd(vd.GetSize());
+		long kernel_radius = 1;//wxGetNumberFromUser( "Enter the kernel radius",										_T("Enter a number:"), _T("Numeric input"),										1, 1, 10, 0 );
+		
 		if ( kernel_radius <= 0 )return;
 		Progress progress(wxT("Noise reduce"));
 
-		b1 = ivec3::Max(ivec3(kernel_radius),b1);
-		b2 = ivec3::Min(size-ivec3(kernel_radius+1),b2);
+		ivec3 size = vd.GetSize();
+		ivec3 b1 = ivec3::Max(ivec3(kernel_radius),ivec3(0));
+		ivec3 b2 = ivec3::Min(size-ivec3(kernel_radius+1),vd.GetSize());
 		ivec3 id,jd;
 		int ker_size = (kernel_radius*2+1);
 		ker_size *=ker_size*ker_size;
 
-		short*res_data = new short[size.x*size.y*size.z];
-		memcpy(res_data,data,size.x*size.y*size.z*2);
 
 		short*ker = new short[ker_size];
 
@@ -387,14 +268,14 @@ namespace segmentation
 		{
 			vec2 grad(0);
 			float sum_w=0;
-			short*cur_el = res_data+GetID(id);
+			
 
 			short*ker1 = ker;
 			for(jd.z=id.z-kernel_radius;jd.z<=id.z+kernel_radius;jd.z++)
 			for(jd.y=id.y-kernel_radius;jd.y<=id.y+kernel_radius;jd.y++)
 			for(jd.x=id.x-kernel_radius;jd.x<=id.x+kernel_radius;jd.x++)
 			{
-				*ker1 = *(data+GetID(jd));
+				*ker1 = vd.GetValue(jd);
 				ker1++;
 			}
 
@@ -408,17 +289,66 @@ namespace segmentation
 					}
 
 
-			*cur_el = ker[ker_size/2];
+			vd.SetValue( ker[ker_size/2], id);
 
-			cur_el++;
+			
 		}
 		Progress::inst->SetPercent((id.z-b1.z)/(float)(b2.z-b1.z));
 		}
 	
-		memcpy(data,res_data,size.x*size.y*size.z*2);
-		delete []res_data;
-		//delete []ker;
+		vd.SwapWith(tmp_vd);
+		vd.Clear();
+		
+		
+		delete []ker;
+	}
+	
+	void GaussFilter(VData vd)
+	{
+		VData tmp_vd(vd.GetSize());
+		long kernel_radius = 1;//wxGetNumberFromUser( "Enter the kernel radius",										_T("Enter a number:"), _T("Numeric input"),										1, 1, 10, 0 );
+		
+		if ( kernel_radius <= 0 )return;
+		Progress progress(wxT("Noise reduce"));
+
+		ivec3 size = vd.GetSize();
+		ivec3 b1 = ivec3::Max(ivec3(kernel_radius),ivec3(0));
+		ivec3 b2 = ivec3::Min(size-ivec3(kernel_radius+1),vd.GetSize());
+		ivec3 id,jd;
+		int ker_size = (kernel_radius*2+1);
+		ker_size *=ker_size*ker_size;
+
+
+
+		for(id.z=b1.z;id.z<=b2.z;id.z++)
+		{
+		for(id.y=b1.y;id.y<=b2.y;id.y++)
+		for(id.x=b1.x;id.x<=b2.x;id.x++)
+		{
+			vec2 grad(0);
+			double sum_w=0;
+			double summ=0;
+			
+			for(jd.z=id.z-kernel_radius;jd.z<=id.z+kernel_radius;jd.z++)
+			for(jd.y=id.y-kernel_radius;jd.y<=id.y+kernel_radius;jd.y++)
+			for(jd.x=id.x-kernel_radius;jd.x<=id.x+kernel_radius;jd.x++)
+			{
+				float ww = 1.0f/(1+(jd-id).lengthSQR());
+				summ += vd.GetValue(jd)*ww;
+				sum_w += ww;
+			}
+
+			vd.SetValue( summ/sum_w, id);
+
+			
+		}
+		Progress::inst->SetPercent((id.z-b1.z)/(float)(b2.z-b1.z));
+		}
+	
+		vd.SwapWith(tmp_vd);
+		vd.Clear();
+		
+		
 	}
 };
 
-*/
