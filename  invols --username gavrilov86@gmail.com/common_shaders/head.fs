@@ -25,7 +25,10 @@ uniform vec3 cs_center[$VD_NUMBER];
 uniform vec3 cs_x[$VD_NUMBER];
 uniform vec3 cs_y[$VD_NUMBER];
 uniform vec3 cs_z[$VD_NUMBER];
-uniform sampler3D f_text;
+uniform sampler3D f_text1;
+uniform sampler3D f_text2;
+
+
 uniform sampler3D f_text_i;
 uniform sampler3D f_text_tf;
 uniform float opacity[$VD_NUMBER];
@@ -118,20 +121,20 @@ vec3 ToTextureSpace1(vec3 ps,int id)
 	return mm*ps;
 }
 
-float FastEqu(vec3 arg,int id)
+float FastEqu(vec3 arg,int id,sampler3D tex)
 {
 	vec3 coord=ToTextureSpace(arg,id);
-	return texture3D(f_text, coord).x;
+	return texture3D(tex, coord).x;
 }
-float Equ(vec3 arg,int id)
+float Equ(vec3 arg,int id,sampler3D tex)
 {
 	vec3 coord=ToTextureSpace(arg,id);
 	if(coord==clamp(coord,vec3(0.01),vec3(0.99)))
 	{
 		#if $use_cubic_filt==0
-			return texture3D(f_text, coord).x;
+			return texture3D(tex, coord).x;
 		#else
-			return interpolate_cubic(f_text,coord,cell_size[id]);
+			return interpolate_cubic(tex,coord,cell_size[id]);
 		#endif
 	}
 	else
@@ -189,25 +192,25 @@ vec3 coord=ToTextureSpace(arg);
 		return 0.0;
 }*/
 
-vec3 GradEqu(in vec3 arg,int id)
+vec3 GradEqu(in vec3 arg,int id,sampler3D tex)
 {
 	float delta = cell_size[id].x;
 	vec3 res;
-	res.x = Equ(vec3(arg.x+delta,arg.y,arg.z),id)-Equ(vec3(arg.x-delta,arg.y,arg.z),id);
-	res.y = Equ(vec3(arg.x,arg.y+delta,arg.z),id)-Equ(vec3(arg.x,arg.y-delta,arg.z),id);
-	res.z = Equ(vec3(arg.x,arg.y,arg.z+delta),id)-Equ(vec3(arg.x,arg.y,arg.z-delta),id);
+	res.x = Equ(vec3(arg.x+delta,arg.y,arg.z),id,tex)-Equ(vec3(arg.x-delta,arg.y,arg.z),id,tex);
+	res.y = Equ(vec3(arg.x,arg.y+delta,arg.z),id,tex)-Equ(vec3(arg.x,arg.y-delta,arg.z),id,tex);
+	res.z = Equ(vec3(arg.x,arg.y,arg.z+delta),id,tex)-Equ(vec3(arg.x,arg.y,arg.z-delta),id,tex);
 	return res;
 
 }
 
 
-vec3 GradEqu1(float ee,in vec3 arg, int id)
+vec3 GradEqu1(float ee,in vec3 arg, int id,sampler3D tex)
 {
 	float delta = cell_size[id].x;
 	vec3 res;
-	res.x = FastEqu(vec3(arg.x+delta,arg.y,arg.z),id)-ee;
-	res.y = FastEqu(vec3(arg.x,arg.y+delta,arg.z),id)-ee;
-	res.z = FastEqu(vec3(arg.x,arg.y,arg.z+delta),id)-ee;
+	res.x = FastEqu(vec3(arg.x+delta,arg.y,arg.z),id,tex)-ee;
+	res.y = FastEqu(vec3(arg.x,arg.y+delta,arg.z),id,tex)-ee;
+	res.z = FastEqu(vec3(arg.x,arg.y,arg.z+delta),id,tex)-ee;
 	return res;
 
 }

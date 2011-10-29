@@ -40,6 +40,7 @@ bool MyApp::OnInit()
 	wxMenu *fileMenu = new wxMenu;
 	fileMenu->Append(MYACT_SAVE_PROFILE, _T(MY_TXT("Save Workspace","Сохранить профиль")));
 	fileMenu->Append(MYACT_LOAD_PROFILE, _T(MY_TXT("Load Workspace","Загрузить профиль")));
+	fileMenu->Append(MYACT_SETDEFAULT_PROFILE, _T(MY_TXT("Set as default Workspace","Сделать этот профиль по умолчанию")));
 	fileMenu->AppendSeparator();
 
 	fileMenu->Append(MYACT_LOAD_DICOMDIR, _T(MY_TXT("Open folder with DICOM files","Открыть папку с DICOM файлами")));

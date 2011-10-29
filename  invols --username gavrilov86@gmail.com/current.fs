@@ -12,19 +12,20 @@ uniform float screen_height;
 uniform vec3 RFrom;
 uniform vec3 GFrom;
 uniform vec3 BFrom;
-uniform float max_level[1],min_level[1];
-uniform vec3 cell_size[1];
-uniform vec3 cs_center[1];
-uniform vec3 cs_x[1];
-uniform vec3 cs_y[1];
-uniform vec3 cs_z[1];
-uniform sampler3D f_text;
+uniform float max_level[2],min_level[2];
+uniform vec3 cell_size[2];
+uniform vec3 cs_center[2];
+uniform vec3 cs_x[2];
+uniform vec3 cs_y[2];
+uniform vec3 cs_z[2];
+uniform sampler3D f_text1;
+uniform sampler3D f_text2;
 uniform sampler3D f_text_i;
 uniform sampler3D f_text_tf;
-uniform float opacity[1];
-uniform int IsoLast[1];
-uniform int QuadLast[1];
-uniform vec2 tf_ww[1];
+uniform float opacity[2];
+uniform int IsoLast[2];
+uniform int QuadLast[2];
+uniform vec2 tf_ww[2];
 uniform vec3 LightDir;
 uniform sampler2D txt_level_color;
 uniform sampler2D front_dist_txt;
@@ -99,20 +100,20 @@ vec3 ToTextureSpace1(vec3 ps,int id)
 	mat3 mm = mat3(cs_x[id],cs_y[id],cs_z[id]);
 	return mm*ps;
 }
-float FastEqu(vec3 arg,int id)
+float FastEqu(vec3 arg,int id,sampler3D tex)
 {
 	vec3 coord=ToTextureSpace(arg,id);
-	return texture3D(f_text, coord).x;
+	return texture3D(tex, coord).x;
 }
-float Equ(vec3 arg,int id)
+float Equ(vec3 arg,int id,sampler3D tex)
 {
 	vec3 coord=ToTextureSpace(arg,id);
 	if(coord==clamp(coord,vec3(0.01),vec3(0.99)))
 	{
 		#if 0==0
-			return texture3D(f_text, coord).x;
+			return texture3D(tex, coord).x;
 		#else
-			return interpolate_cubic(f_text,coord,cell_size[id]);
+			return interpolate_cubic(tex,coord,cell_size[id]);
 		#endif
 	}
 	else
@@ -169,22 +170,22 @@ vec3 coord=ToTextureSpace(arg);
 	else
 		return 0.0;
 }*/
-vec3 GradEqu(in vec3 arg,int id)
+vec3 GradEqu(in vec3 arg,int id,sampler3D tex)
 {
 	float delta = cell_size[id].x;
 	vec3 res;
-	res.x = Equ(vec3(arg.x+delta,arg.y,arg.z),id)-Equ(vec3(arg.x-delta,arg.y,arg.z),id);
-	res.y = Equ(vec3(arg.x,arg.y+delta,arg.z),id)-Equ(vec3(arg.x,arg.y-delta,arg.z),id);
-	res.z = Equ(vec3(arg.x,arg.y,arg.z+delta),id)-Equ(vec3(arg.x,arg.y,arg.z-delta),id);
+	res.x = Equ(vec3(arg.x+delta,arg.y,arg.z),id,tex)-Equ(vec3(arg.x-delta,arg.y,arg.z),id,tex);
+	res.y = Equ(vec3(arg.x,arg.y+delta,arg.z),id,tex)-Equ(vec3(arg.x,arg.y-delta,arg.z),id,tex);
+	res.z = Equ(vec3(arg.x,arg.y,arg.z+delta),id,tex)-Equ(vec3(arg.x,arg.y,arg.z-delta),id,tex);
 	return res;
 }
-vec3 GradEqu1(float ee,in vec3 arg, int id)
+vec3 GradEqu1(float ee,in vec3 arg, int id,sampler3D tex)
 {
 	float delta = cell_size[id].x;
 	vec3 res;
-	res.x = FastEqu(vec3(arg.x+delta,arg.y,arg.z),id)-ee;
-	res.y = FastEqu(vec3(arg.x,arg.y+delta,arg.z),id)-ee;
-	res.z = FastEqu(vec3(arg.x,arg.y,arg.z+delta),id)-ee;
+	res.x = FastEqu(vec3(arg.x+delta,arg.y,arg.z),id,tex)-ee;
+	res.y = FastEqu(vec3(arg.x,arg.y+delta,arg.z),id,tex)-ee;
+	res.z = FastEqu(vec3(arg.x,arg.y,arg.z+delta),id,tex)-ee;
 	return res;
 }
 #define K_A 0.1
@@ -233,14 +234,14 @@ void main()
 #endif
 	float start=1000.0,final=0.0;
 	int id;
-	//vec2 livetime[1];
-	bool inter[1];
+	//vec2 livetime[2];
+	bool inter[2];
 	vec3 color = vec3(0.0),norm;
-	vec4 step  = vec4(ray*step_length,step_length);
+	vec4 step  = vec4(ray*step_length,step_length),cl;
 	float ddd=step_length*1500.0;
 	float alpha = 0.0,s,f;
-	float e[1],e0[1];
-	for(id=0;id<1;id++)
+	float e[2],e0[2];
+	for(id=0;id<2;id++)
 	{
 		e[id] = 0.0;
 		inter[id] = IntersectBox (ToTextureSpace(ps.xyz,id), ToTextureSpace1(ray,id),vec3(0.0),vec3(1.0), s,f );
@@ -273,6 +274,7 @@ void main()
 			f=final;
 			
 			if(final<=start)break;
+			
 			start = max(start,start0);
 			final = min(final,final0);
 #endif
@@ -280,83 +282,63 @@ void main()
 			ps = ps0 + step*(start/step_length);
 		
 			ps = ps + step*(1.0+rand(vec4(vertex,ps.w)));
+			id=1;
+			sampler3D tex[2];
+			tex[0] = f_text1;
+			tex[1] = f_text2;
 			while(ps.w <final)
 			{
-				int cur_quad=0;
 			
-				for(id=0;id<1;id++)
+				for(id=0;id<2;id++)
+				//if(inter[id])
+				
 				{
-					e[id] = Equ(ps.xyz,id);
-					for(;cur_quad<=QuadLast[id];cur_quad++)
+					e0[id] = Equ(ps.xyz,id,tex[id]);
+					e[id] = ((e0[id]-min_level[id])/(max_level[id]-min_level[id]));
+					if(e[id]>0.0)
 					{
-						#if 0==0
-						if(e[id] >= q_level[cur_quad].x)
-						{
-							norm = GradEqu1(e[id],ps.xyz,id);
-							
-							float gm = length(norm);
-							
-							if(gm >= q_level[cur_quad].z)
-							{
-								vec4 cl = q_color[cur_quad] * min(1.0,(e[id] - q_level[cur_quad].x)/(q_level[cur_quad].y - q_level[cur_quad].x));
-//								cl = mix(cl,vec4(1.0,1.0,1.0,cl.w), min(1.0,(gm - q_level[cur_quad].z)/(q_level[cur_quad].w - q_level[cur_quad].z)));
-								cl *=  min(1.0,(gm - q_level[cur_quad].z)/(q_level[cur_quad].w - q_level[cur_quad].z));
-								cl.w *= ddd*opacity[id];
-								#if 0==1
-								if(dot(norm,ray)<0)norm=-norm;
-								cl.xyz = Phong(ps.xyz,-normalize(norm),cl.xyz);
-								#endif
-								color = color + (1.0-alpha) * cl.w * cl.xyz;
-								
-								alpha = alpha + (1.0-alpha)*cl.w;
-							}
-						}
+						#if 1==0
+						cl =  vec4(e[id]);
 						#endif
+						#if 1==1
+						cl =  GetLevelColor(e0[id],id);
+						#endif
+						cl.w *= ddd*opacity[id];
 						#if 0==1
-						if(e[id] == clamp(e[id],q_level[cur_quad].x,q_level[cur_quad].y))
-						{
-							norm = GradEqu1(e[id],ps.xyz,id);
-							
-							float gm = length(norm);
-							
-							if(gm == clamp(gm,q_level[cur_quad].z,q_level[cur_quad].w))
-							{
-								vec4 cl;
-								cl =  GetLevelColor(e[id],id);
-								cl.w *= ddd*opacity[id];
-								#if 0==1
-								if(dot(norm,ray)<0)norm=-norm;
-								cl.xyz = Phong(ps.xyz,-normalize(norm),cl.xyz);
-								#endif
-								color = color + (1.0-alpha) * cl.w * cl.xyz;
-								
-								alpha = alpha + (1.0-alpha)*cl.w;
-							}
-						}
+							norm = normalize(GradEqu1(e0[id],ps.xyz,id,tex[id])+vec3(0.000001));
+							//cl.xyz = mix(Phong(ps.xyz,-norm,cl.xyz),Phong(ps.xyz,nrm,cl.xyz),max(start-ps.w+0.02,0.0)/0.02);
+							if(dot(norm,ray)<0)norm=-norm;
+							cl.xyz = Phong(ps.xyz,-norm,cl.xyz);
 						#endif
+						float d_alpha = (1.0-alpha) * cl.w;
+						//if(alpha==0.0 && d_alpha!=0.0)gl_FragDepth = max(GetDepth(ps.xyz),0.1);
+						mid_t += d_alpha*ps.w;
+						color = color + d_alpha * cl.xyz;
+						
+						alpha = alpha + d_alpha;
 						
 					}
-					
+					if(alpha>0.95)
+						{
+							alpha=1.0;
+							break;
+						}
 						
 				}
 				
-				if(alpha>255.0/256.0)
-				{
-					alpha=1.0;
-					break;
-				}
 				
 				
-				ps+=step;
+				ps += step;
 			}
-				
+			
 #if 0!=0
 			if(alpha==1.0)break;
 		}
 #endif		
-	
-			
 		
+		//		color.x = texture2D(front_dist_txt,text_coord).x;
+	//	color.y = texture2D(back_dist_txt,text_coord).x;
+//		gl_FragDepth = max(GetDepth(ps0.xyz + min(ps.w,step.xyz*(mid_t/step_length))),0.1);
 		gl_FragDepth = max(GetDepth(ps.xyz),0.1);
 		mat3 m_anag = mat3(RFrom,GFrom,BFrom);
 		gl_FragColor = vec4(color*m_anag,alpha);

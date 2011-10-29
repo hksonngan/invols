@@ -11,7 +11,7 @@
 #include "seg_points.h"
 #include "app_state.h"
 
-const int PROFILE_VERSION = 75;
+const int PROFILE_VERSION = 4;
 
 
 BEGIN_EVENT_TABLE(MainFrame, wxFrame)
@@ -25,6 +25,7 @@ BEGIN_EVENT_TABLE(MainFrame, wxFrame)
 	EVT_MENU(MYACT_LOAD_TO_GPU, MainFrame::OnLoadToGPU)
 	EVT_MENU(MYACT_SAVE_PROFILE, MainFrame::OnSaveProfile)
 	EVT_MENU(MYACT_LOAD_PROFILE, MainFrame::OnLoadProfile)
+	EVT_MENU(MYACT_SETDEFAULT_PROFILE, MainFrame::SetDefaultProfile)
 	
 	EVT_MENU(MYACT_MOUSE_ARROW, MainFrame::OnMouseArrow)
 	EVT_MENU(MYACT_MOUSE_ROTATE, MainFrame::OnMouseRotate)
@@ -608,8 +609,9 @@ void MainFrame::OnApplyResampling(wxCommandEvent& event)
 
 void MainFrame::LoadProfile(wxString fname)
 {
+	if(!wxFile::Exists(fname))return;
 	wxFile fs(fname,wxFile::read);
-	if(fs.Error())return;
+	
 
 	int pv;
 	OpenItem(fs,pv);
@@ -645,6 +647,10 @@ void MainFrame::SaveProfile(wxString fname)
 		
 	fs.Close();
 }
+void MainFrame::SetDefaultProfile(wxCommandEvent& event)
+{
+	SaveProfile("./default.invols");
+}
 
 
 void MainFrame::OnLightToCamera(wxCommandEvent& event)
@@ -654,10 +660,11 @@ void MainFrame::OnLightToCamera(wxCommandEvent& event)
 }
 void MainFrame::OnSaveVD(wxCommandEvent& event)
 {
-	wxFileDialog * openFileDialog = new wxFileDialog(this,MY_TXT("Save volume data","Сохранить объёмные данные"),"./Datasets/","","*.raw",wxSAVE);
+	static wxString fileName = "";
+	wxFileDialog * openFileDialog = new wxFileDialog(this,MY_TXT("Save volume data","Сохранить объёмные данные"),"./Datasets/",fileName,"*.raw",wxSAVE);
 	if(openFileDialog->ShowModal() == wxID_OK)
 	{
-		wxString fileName = openFileDialog->GetPath();
+		fileName = openFileDialog->GetPath();
 		
 		wxFile fs2(fileName+".txt",wxFile::write);
 		std::string outs = "size: ";
@@ -681,10 +688,11 @@ void MainFrame::OnSaveVD(wxCommandEvent& event)
 
 void MainFrame::OnLoadVD(wxCommandEvent& event)
 {
-	wxFileDialog * openFileDialog = new wxFileDialog(this,MY_TXT("Load volume data","Загрузить объёмные данные"),"./Datasets/","","*.raw",wxOPEN);
+	static wxString fileName = "";
+	wxFileDialog * openFileDialog = new wxFileDialog(this,MY_TXT("Load volume data","Загрузить объёмные данные"),"./Datasets/",fileName,"*.raw",wxOPEN);
 	if(openFileDialog->ShowModal() == wxID_OK)
 	{
-		wxString fileName = openFileDialog->GetPath();
+		fileName = openFileDialog->GetPath();
 		wxFile fs(fileName,wxFile::read);
 		if(!fs.Error())
 		{

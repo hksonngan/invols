@@ -24,6 +24,7 @@ enum
  MYACT_FULL_SCREEN ,
  MYACT_SAVE_PROFILE ,
  MYACT_LOAD_PROFILE ,
+ MYACT_SETDEFAULT_PROFILE ,
 
  MYACT_MOUSE_ARROW,
  MYACT_MOUSE_ROTATE ,
@@ -116,6 +117,7 @@ public:
 
 	void LoadProfile(wxString fname);
 	void SaveProfile(wxString fname);
+	void SetDefaultProfile(wxCommandEvent& event);
 
 	void MyMessageBox(wxString mess);
 	

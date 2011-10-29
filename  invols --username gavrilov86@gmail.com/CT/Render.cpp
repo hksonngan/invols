@@ -273,8 +273,8 @@ void Render::_ReLoadShader()
 	
 	str::AddPair(repl,"$IsoNum",str::ToString(rm->isos_sum));
 	str::AddPair(repl,"$QuadNum",str::ToString(rm->quads_sum));
-	//str::AddPair(repl,"$VD_NUMBER",str::ToString(CT::GetVolumesNumber()));
-	str::AddPair(repl,"$VD_NUMBER","1");
+	str::AddPair(repl,"$VD_NUMBER",str::ToString(CT::GetVolumesNumber()));
+	//str::AddPair(repl,"$VD_NUMBER","1");
 	str::AddPair(repl,"$use_accel_struct",rm->use_accel_struct?"1":"0");
 	str::AddPair(repl,"$use_cubic_filt",rm->use_cubic_filt?"1":"0");
 	str::AddPair(repl,"$drop_shadows",rm->drop_shadows?"1":"0");
@@ -548,8 +548,12 @@ vec3 box2 = b2;
 	}
 	if(CT::GetData(0)->IsLoaded())
 	{
-		ps->SetVar1("f_text",CT::GetData(0)->SetDataTextureID(VD_TXT_ID));
+		ps->SetVar1("f_text1",CT::GetData(0)->SetDataTextureID(VD_TXT_ID));
 		//ps->SetVar1("f_text_tf",CT::GetTFData(0)->SetDataTextureID(I_TXT_ID));
+	}
+	if(CT::GetData(1)->IsLoaded())
+	{
+		ps->SetVar1("f_text2",CT::GetData(1)->SetDataTextureID(VD_TXT_ID+1));
 	}
 
 	ps->SetVar1("front_dist_txt", rtt_SetID(FRONT_FACE_TXT_ID,rtt_GetTexture(1)));
@@ -730,11 +734,10 @@ void Render::Save(wxFile& fs)
 		RenderingMethod* tmp = rendering_methods[k];
 		
 
+		SaveString(fs,tmp->fs_filename);
+		SaveString(fs,tmp->caption);
 		SaveItem(fs,tmp->size);
 		SaveItem(fs,tmp->pos);
-
-		SaveString(fs,tmp->caption);
-		SaveString(fs,tmp->fs_filename);
 		SaveItem(fs,tmp->isos_sum);
 		SaveItem(fs,tmp->quads_sum);
 		for(int i=0;i<MAX_VD_NUMBER;i++)
@@ -754,6 +757,7 @@ void Render::Save(wxFile& fs)
 		SaveItem(fs,tmp->shade_mode);
 		SaveItem(fs,tmp->tf_type);
 	}
+	SaveItem(fs,CurRM);
 	
 }
 void Render::ClearRMs()
@@ -775,19 +779,25 @@ void Render::Load(wxFile& fs)
 	
 
 	RenderingMethod* tmp;
-	ClearRMs();
+	//ClearRMs();
 	
 	int rm_num;
 	OpenItem(fs,rm_num);
 	for(int k=0;k<rm_num;k++)
 	{
-		tmp = new RenderingMethod();
-
+		wxString tmp_s;
+		OpenString(fs,tmp_s);
+		tmp=0;
+		for(int i=0;i<rendering_methods.size();i++)
+			if(rendering_methods[i]->fs_filename==tmp_s)
+			{
+				tmp = rendering_methods[i];break;
+			}
+		if(!tmp)continue;
+		OpenString(fs,tmp->caption);
 		OpenItem(fs,tmp->size);
 		OpenItem(fs,tmp->pos);
-
-		OpenString(fs,tmp->caption);
-		OpenString(fs,tmp->fs_filename);
+	
 		OpenItem(fs,tmp->isos_sum);
 		OpenItem(fs,tmp->quads_sum);
 		for(int i=0;i<MAX_VD_NUMBER;i++)
@@ -803,7 +813,7 @@ void Render::Load(wxFile& fs)
 			OpenItem(fs,tmp->iso_last[i]);
 			OpenItem(fs,tmp->quad_last[i]);
 		}
-		rendering_methods.push_back(tmp);
+		//rendering_methods.push_back(tmp);
 		OpenItem(fs,tmp->use_accel_struct);
 		OpenItem(fs,tmp->use_cubic_filt);tmp->use_cubic_filt=0;
 		OpenItem(fs,tmp->drop_shadows);
@@ -812,8 +822,10 @@ void Render::Load(wxFile& fs)
 		tmp=0;
 
 	}
+	OpenItem(fs,CurRM);
+	
 
-	SetCurRM(0);
+	SetCurRM(CurRM);
 
 
 

@@ -71,7 +71,7 @@ void main()
 				//if(inter[id])
 
 				{
-					e0[id] = Equ(ps.xyz,id);
+					e0[id] = Equ(ps.xyz,id,f_text1);
 					e[id] = ((e0[id]-min_level[id])/(max_level[id]-min_level[id]));
 					if(e[id]>0.0)
 					{
@@ -84,7 +84,7 @@ void main()
 
 						cl.w *= ddd*opacity[id];
 						#if $shade_mode==1
-							norm = normalize(GradEqu1(e0[id],ps.xyz,id)+vec3(0.000001));
+							norm = normalize(GradEqu1(e0[id],ps.xyz,id,f_text1)+vec3(0.000001));
 							//cl.xyz = mix(Phong(ps.xyz,-norm,cl.xyz),Phong(ps.xyz,nrm,cl.xyz),max(start-ps.w+0.02,0.0)/0.02);
 							if(dot(norm,ray)<0)norm=-norm;
 							cl.xyz = Phong(ps.xyz,-norm,cl.xyz);
