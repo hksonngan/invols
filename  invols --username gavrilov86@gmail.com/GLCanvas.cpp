@@ -150,7 +150,6 @@ void GLCanvas::OnSize(wxSizeEvent& event)
 
     int w, h;
     GetClientSize(&w, &h);
-
 //	wxGLContext *c = GetContext();
   //  if (c)
     {

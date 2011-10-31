@@ -46,6 +46,9 @@ BEGIN_EVENT_TABLE(MainFrame, wxFrame)
 	EVT_MENU(MYACT_LOAD_VD, MainFrame::OnLoadVD)
 	EVT_MENU(MYACT_USE_BOUNDING_MESH, MainFrame::OnUseBoundingMesh)
 	EVT_MENU(MYACT_AUTO_GPU_UPLOAD, MainFrame::OnAutoGPUUpload)
+
+	EVT_MENU(MYACT_SET_DATA1, MainFrame::OnSetData1)
+	EVT_MENU(MYACT_SET_DATA2, MainFrame::OnSetData2)
 	
 	
 	EVT_MENU(MYACT_LIGHT_TO_CAMERA, MainFrame::OnLightToCamera)
@@ -151,6 +154,15 @@ MainFrame::MainFrame(wxFrame *frame, const wxString& title, const wxPoint& pos, 
 	tb6->AddTool(MYACT_USE_BOUNDING_MESH, "", IMG("use_bounding_mesh"),wxT(MY_TXT("Use bounding mesh","Использовать ограничивающую ролигональную модель")),wxITEM_CHECK);
     tb6->Realize();
 	m_mgr.AddPane(tb6, wxAuiPaneInfo().Name(wxT("tb6")).Caption(wxT(MY_TXT("Bounding mesh","Огранич.модель"))).ToolbarPane().Top());
+
+
+	tb7 = new wxAuiToolBar(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxAUI_TB_DEFAULT_STYLE);
+    tb7->SetToolBitmapSize(icon_size);
+	tb7->AddTool(MYACT_SET_DATA1, "", IMG("set_data1"),wxT(MY_TXT("Switch to data1","Переключиться на данные1")),wxITEM_CHECK);
+	
+	tb7->AddTool(MYACT_SET_DATA2, "", IMG("set_data2"),wxT(MY_TXT("Switch to data2","Переключиться на данные2")),wxITEM_CHECK);
+    tb7->Realize();
+	m_mgr.AddPane(tb7, wxAuiPaneInfo().Name(wxT("tb7")).Caption(wxT(MY_TXT("Current dataset","Текущий массив данных"))).ToolbarPane().Top());
 
 	wxPanel *gl_p[4];
 
@@ -658,14 +670,8 @@ void MainFrame::OnLightToCamera(wxCommandEvent& event)
 	CT::light_to_camera = !CT::light_to_camera;
 	if(CT::light_to_camera)CT::need_rerender=1;
 }
-void MainFrame::OnSaveVD(wxCommandEvent& event)
+void MainFrame::SaveVD(wxString fileName)
 {
-	static wxString fileName = "";
-	wxFileDialog * openFileDialog = new wxFileDialog(this,MY_TXT("Save volume data","Сохранить объёмные данные"),"./Datasets/",fileName,"*.raw",wxSAVE);
-	if(openFileDialog->ShowModal() == wxID_OK)
-	{
-		fileName = openFileDialog->GetPath();
-		
 		wxFile fs2(fileName+".txt",wxFile::write);
 		std::string outs = "size: ";
 		outs += str::ToString(CPU_VD::full_data.GetSize().x)+" ";
@@ -682,6 +688,16 @@ void MainFrame::OnSaveVD(wxCommandEvent& event)
 		for(int i=0;i<CPU_VD::full_data.GetSize().z;i++)
 			fs3.Write((char*)CPU_VD::full_data.GetSlice(i),2*CPU_VD::full_data.GetSize().x*CPU_VD::full_data.GetSize().y);
 		fs3.Close();
+}
+void MainFrame::OnSaveVD(wxCommandEvent& event)
+{
+	static wxString fileName = "";
+	wxFileDialog * openFileDialog = new wxFileDialog(this,MY_TXT("Save volume data","Сохранить объёмные данные"),"./Datasets/",fileName,"*.raw",wxSAVE);
+	if(openFileDialog->ShowModal() == wxID_OK)
+	{
+		fileName = openFileDialog->GetPath();
+		SaveVD(fileName);
+
 	}
 	delete openFileDialog;
 }
@@ -717,6 +733,16 @@ void MainFrame::OnUseBoundingMesh(wxCommandEvent& event)
 	CT::seg_BuildBox(vec3(0),vec3(1));
 	CT::iso->ReLoadShader();
 	CT::need_rerender=1;
+}
+void MainFrame::OnSetData1(wxCommandEvent& event)
+{
+	tb7->ToggleTool(MYACT_SET_DATA2, 0);
+	CT::SetCurDataID(0);
+}
+void MainFrame::OnSetData2(wxCommandEvent& event)
+{
+	tb7->ToggleTool(MYACT_SET_DATA1, 0);
+	CT::SetCurDataID(1);
 }
 void MainFrame::OnAutoGPUUpload(wxCommandEvent& event)
 {

@@ -14,7 +14,8 @@ public:
 
 	void OnSliderZ(wxCommandEvent& WXUNUSED(event));
 	
-	void OnBtnDir(wxCommandEvent& event);
+	void OnBtnDir1(wxCommandEvent& event);
+	void OnBtnDir2(wxCommandEvent& event);
 	void OnBtnUp(wxCommandEvent& event);
 	void OnBtnMakePictures(wxCommandEvent& event);
 

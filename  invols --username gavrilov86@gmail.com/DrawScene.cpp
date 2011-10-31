@@ -249,15 +249,31 @@ void DrawScene()
 		if(rendering_to_file)
 		{
 			glReadBuffer(GL_COLOR_ATTACHMENT0_EXT);
+			int width1=width;
+			int height1=height;
+			int psize=4;
 
-			unsigned char *dt = new unsigned char [width*height*3];
+			unsigned char *dt0 = new unsigned char [width1*height1*psize];
+			unsigned char *dt = new unsigned char [width1*height1*psize];
 
-			glReadPixels(0, 0, width,height, GL_RGB,GL_UNSIGNED_BYTE,dt);	
-			wxImage img(width,height,dt,true);
+			glReadPixels(0, 0, width1,height1, GL_RGBA,GL_UNSIGNED_BYTE,dt0);	
+			
+			//for(int i=0;i<height1;i++)
+			//	memcpy(dt+(height1-i-1)*width1*psize,dt0+i*width1*psize,width1*psize);
+			for(int i=0;i<height1;i++)
+				for(int j=0;j<width1;j++)
+				for(int k=0;k<3;k++)
+				{
+					dt[(j+i*width1)*3+k] = dt0[(j+(height1-i-1)*width1)*4+k];
+				//memcpy(dt+(height1-i-1)*width1*psize,dt0+i*width1*psize,width1*psize);
+				}
+			wxImage img(width1,height1,dt,true);
 			wxBitmap bp(img);
 			bp.SaveFile(screenshot_dst,wxBITMAP_TYPE_PNG);
 			delete[]dt;
+			delete[]dt0;
 		}
+			
 		rtt_End();
 
 	

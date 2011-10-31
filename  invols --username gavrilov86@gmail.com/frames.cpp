@@ -10,7 +10,8 @@ BEGIN_EVENT_TABLE(FramesPanel, wxPanel)
 
 	EVT_SLIDER(1, FramesPanel::OnSliderZ)
 
-	EVT_BUTTON(2, FramesPanel::OnBtnDir)
+	EVT_BUTTON(2, FramesPanel::OnBtnDir1)
+	EVT_BUTTON(5, FramesPanel::OnBtnDir2)
 	EVT_BUTTON(3, FramesPanel::OnBtnUp)
 	EVT_BUTTON(4, FramesPanel::OnBtnMakePictures)
 END_EVENT_TABLE()
@@ -20,8 +21,12 @@ FramesPanel::FramesPanel(wxWindow *frame) : wxPanel(frame)
 	wxSizer* sz = new wxBoxSizer(wxVERTICAL);
 
 #define IMG(fn) wxBitmap(wxString("./Images/")+wxString(fn)+wxString(".bmp"),wxBITMAP_TYPE_ANY)
-	wxButton*btn1=new wxBitmapButton(this,2,IMG("load"));
-	btn1->SetToolTip(MY_TXT("Choose source directory","Выбрать папку с данными"));
+
+	wxButton*btn1=new wxBitmapButton(this,2,IMG("choose_src_folder1"));
+	btn1->SetToolTip(MY_TXT("Choose source1 directory","Выбрать папку с данными1"));
+	wxButton*btn11=new wxBitmapButton(this,5,IMG("choose_src_folder2"));
+	btn11->SetToolTip(MY_TXT("Choose source2 directory","Выбрать папку с данными2"));
+
 	wxButton*btn2=new wxBitmapButton(this,3,IMG("update_log"));
 	btn2->SetToolTip(MY_TXT("Load frame","Загрузить кадр"));
 	wxButton*btn3=new wxBitmapButton(this,4,IMG("segment"));
@@ -29,6 +34,7 @@ FramesPanel::FramesPanel(wxWindow *frame) : wxPanel(frame)
 
 	wxSizer* sz1 = new wxBoxSizer(wxHORIZONTAL);
 	sz1->Add(btn1,0,wxEXPAND);
+	sz1->Add(btn11,0,wxEXPAND);
 	sz1->Add(btn2,0,wxEXPAND);
 	sz1->Add(btn3,0,wxEXPAND);
 
@@ -42,8 +48,14 @@ FramesPanel::FramesPanel(wxWindow *frame) : wxPanel(frame)
 	SetSizer(sz);
 }
 
-void FramesPanel::OnBtnDir(wxCommandEvent& event)
+void FramesPanel::OnBtnDir1(wxCommandEvent& event)
 {
+	CT::SetCurDataID(0);
+	MyApp::frame->OnLoadBinDir(event);
+}
+void FramesPanel::OnBtnDir2(wxCommandEvent& event)
+{
+	CT::SetCurDataID(1);
 	MyApp::frame->OnLoadBinDir(event);
 }
 

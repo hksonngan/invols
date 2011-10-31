@@ -101,12 +101,12 @@ void main()
 						alpha = alpha + d_alpha;
 						
 					}
-					if(alpha>0.95)
-						{
-							alpha=1.0;
-							break;
-						}
 						
+				}
+				if(alpha>0.95)
+				{
+					alpha=1.0;
+					break;
 				}
 				
 				

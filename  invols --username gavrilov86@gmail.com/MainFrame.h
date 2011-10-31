@@ -52,7 +52,9 @@ enum
  MYACT_LOAD_VD,
  MYACT_RM_PIC_VIEW,
  MYACT_USE_BOUNDING_MESH,
- MYACT_AUTO_GPU_UPLOAD
+ MYACT_AUTO_GPU_UPLOAD,
+ MYACT_SET_DATA1,
+ MYACT_SET_DATA2
 };
 class MainFrame: public wxFrame
 {
@@ -104,9 +106,13 @@ public:
 	void OnApplyResampling(wxCommandEvent& event);
 	void OnGoHome(wxCommandEvent& event);
 	void OnSaveVD(wxCommandEvent& event);
+	void SaveVD(wxString fileName);
 	void OnLoadVD(wxCommandEvent& event);
 	void OnUseBoundingMesh(wxCommandEvent& event);
 	void OnAutoGPUUpload(wxCommandEvent& event);
+
+	void OnSetData1(wxCommandEvent& event);
+	void OnSetData2(wxCommandEvent& event);
 
 	void OnShowAllPanes(wxCommandEvent& event);
 	void OnShowAllTools(wxCommandEvent& event);
@@ -139,7 +145,7 @@ public:
 private :
 	wxString default_perspective;
 
-	wxAuiToolBar *tb1,*tb2,*tb3,*tb4,*tb5,*tb6;
+	wxAuiToolBar *tb1,*tb2,*tb3,*tb4,*tb5,*tb6,*tb7;
     long m_notebook_style;
     long m_notebook_theme;
 

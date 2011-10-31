@@ -176,13 +176,29 @@ void DataStat::AnalyseData(VData&data)
 
 		}
 	}
+	if(max-min>32000)
+	{
+		min=0;
+		for(int k=0;k<size.z;k++)
+		{
+			c_data = data.GetSlice(k);
+			for(int j=0;j<size.y;j++)
+			for(int i=0;i<size.x;i++)
+			{
+				
+				*c_data= *((unsigned short*)c_data)/2;
+				c_data++;
 
+			}
+		}
+	}else
 	for(int k=0;k<size.z;k++)
 	{
 		c_data = data.GetSlice(k);
 		for(int j=0;j<size.y;j++)
 		for(int i=0;i<size.x;i++)
 		{
+			
 			*c_data-=min;
 			c_data++;
 
@@ -255,8 +271,8 @@ void Histogram::Build(VData&data)
 		View2D::bc.y = ((hist_size-i)*chunk_size)/(256.0f*128.0f);
 		break;
 	}
-	TF_window::inst->center = View2D::bc.x;
-	TF_window::inst->scale = TF_window::inst->width/(View2D::bc.y-View2D::bc.x+0.01f);
+//	TF_window::inst->center = View2D::bc.x;
+//	TF_window::inst->scale = TF_window::inst->width/(View2D::bc.y-View2D::bc.x+0.01f);
 
 	CT::need_rerender_tf=1;
 
