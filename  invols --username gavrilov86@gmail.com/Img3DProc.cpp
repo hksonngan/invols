@@ -105,7 +105,7 @@ VData GetMipData(VData& data,int dv)
 {
 	ivec3 size = data.GetSize();
 	ivec3 size2(size.x/dv,size.y/dv,size.z/dv);
-	VData data_small(size2);
+	VData data_small(size2,data.GetValueFormat());
 	data_small.spacing = data.spacing*dv;
 
 	for(int i=0;i<size2.x;i++)
@@ -159,50 +159,39 @@ void DataStat::AnalyseData(VData&data)
 {
 	ivec3 size = data.GetSize();
 	long int sum=0;
-	short max=data.GetValue(0,0,0),min=max, *c_data;
+	short max=data.GetValue(0,0,0),min=max,c_data;
+	
 	double mid;
 
 	output::application.println("---Data analysis---");
 	for(int k=0;k<size.z;k++)
+	for(int j=0;j<size.y;j++)
+	for(int i=0;i<size.x;i++)
 	{
-		c_data = data.GetSlice(k);
-		for(int j=0;j<size.y;j++)
-		for(int i=0;i<size.x;i++)
-		{
-			if(max<*c_data)max=*c_data;
-			if(min>*c_data)min=*c_data;
-			sum += *c_data;
-			c_data++;
-
-		}
+		c_data = data.GetValue(i,j,k);
+		if(max<c_data)max=c_data;
+		if(min>c_data)min=c_data;
+		sum += c_data;
 	}
+	/*
 	if(max-min>32000)
 	{
 		min=0;
 		for(int k=0;k<size.z;k++)
-		{
-			c_data = data.GetSlice(k);
-			for(int j=0;j<size.y;j++)
-			for(int i=0;i<size.x;i++)
-			{
-				
-				*c_data= *((unsigned short*)c_data)/2;
-				c_data++;
-
-			}
-		}
-	}else
-	for(int k=0;k<size.z;k++)
-	{
-		c_data = data.GetSlice(k);
 		for(int j=0;j<size.y;j++)
 		for(int i=0;i<size.x;i++)
 		{
-			
-			*c_data-=min;
+			*c_data= *((unsigned short*)c_data)/2;
 			c_data++;
-
 		}
+	}else*/
+	for(int k=0;k<size.z;k++)
+	for(int j=0;j<size.y;j++)
+	for(int i=0;i<size.x;i++)
+	{
+		c_data = data.GetValue(i,j,k);
+		data.SetValue(c_data-min,i,j,k);
+		
 	}
 	mid = sum/double(size.x*size.y*size.z);
 
@@ -232,7 +221,16 @@ Histogram::~Histogram()
 void Histogram::Build(VData&data)
 {
 	ivec3 data_size = data.GetSize();
-	hist_size = 64000/chunk_size;
+	if(data.GetValueFormat()==0)
+	{
+		chunk_size=4;
+		hist_size = 30000/chunk_size;
+	}
+	if(data.GetValueFormat()==1)
+	{
+		chunk_size=1;
+		hist_size = 256;
+	}
 	if(hist)delete[]hist;
 	hist = new unsigned int[hist_size];
 	memset(hist,0,hist_size*sizeof(int));
@@ -256,6 +254,8 @@ void Histogram::Build(VData&data)
 		if(max_chunk<*hh)max_chunk=*hh;
 	}
 
+	if(data.GetValueFormat()==1)
+	{
 	View2D::bc.set(0,0);
 	hh = hist;
 	for(int i=1;i<hist_size;i++,hh++)
@@ -271,6 +271,8 @@ void Histogram::Build(VData&data)
 		View2D::bc.y = ((hist_size-i)*chunk_size)/(256.0f*128.0f);
 		break;
 	}
+	}
+	if(data.GetValueFormat()==1)View2D::bc.set(0,1);
 //	TF_window::inst->center = View2D::bc.x;
 //	TF_window::inst->scale = TF_window::inst->width/(View2D::bc.y-View2D::bc.x+0.01f);
 

@@ -85,7 +85,7 @@ public:
 
 	SimText3D*txt2;//, *txt_reg;
 private:
-	short *sum,*mip;
+	VData sum,mip;
 	void LoadTexture();
 	//void LoadTextureReg();
 char old_cur;

@@ -211,8 +211,7 @@ void UploadVD(int id)
 void FullDraw()
 {
 
-	if(light_to_camera)
-		iso->SetLightDir(CT::cam.GetNav()*(-1));
+	
 
 
 	if(need_reload_volume_data)

@@ -68,7 +68,7 @@ bool MyApp::OnInit()
 	fileMenu = new wxMenu;
 	fileMenu->Append(MYACT_APPLY_MEDIAN_FILTER, _T(MY_TXT("Median filter","Медианный фильтр")));
 	fileMenu->Append(MYACT_APPLY_GAUSS_FILTER, _T(MY_TXT("Gaussian filter","Фильтр Гаусса")));
-	//fileMenu->Append(MYACT_APPLY_RESAMPLING, _T(MY_TXT("Resample","Изменить разрешение")));
+	fileMenu->Append(MYACT_APPLY_RESAMPLING, _T(MY_TXT("Resample","Изменить разрешение")));
     menuBar->Append(fileMenu, _T(MY_TXT("Data processing","Обработка данных")));
     frame->SetMenuBar(menuBar);
 

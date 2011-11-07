@@ -40,7 +40,7 @@ VDPanel::VDPanel(wxWindow *frame) : wxPanel(frame)
 	m_box1 = new wxChoice(this,5);
 	m_box1->Append("Volume 1");
 	m_box1->Append("Volume 2");
-	m_box1->Append("Volume 3");
+	//m_box1->Append("Volume 3");
 	m_box1->Select(0);
 	sz->Add(m_box1);
 	//m_box1->Show(0);

@@ -85,7 +85,7 @@ void rtt_Update(int w,int h)
 
 
 	glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
-	//glBindRenderbufferEXT(GL_RENDERBUFFER_EXT, 0);
+	///glBindRenderbufferEXT(GL_RENDERBUFFER_EXT, 0);
 
 }
 void rtt_Begin(int txt_id)

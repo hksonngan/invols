@@ -84,8 +84,9 @@ void DrawLightSources()
 }
 bool IsFastView()
 {
-//	return (!RM_pic_man && (is_changing || (d_zoom!=1))) && (fast_res!=1);
+	//return 0;
 	return (is_changing_tf || is_changing_box || is_changing || (d_zoom!=1)) && (fast_res!=1) && (!stereo_on ||(stereo_on==1 && RenderingType==2));
+	
 }
 int GetFastWidth()
 {
@@ -96,6 +97,104 @@ int GetFastHeight()
 	return IsFastView()?(height/fast_res):height;
 }
 
+void DrawScene_()
+{
+
+	//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+
+
+	vec3 ps = cam.GetCenter();
+	if(stereo_on)
+	{
+		
+		cam.SetCenter(ps+cam.GetLeft()*stereo_step*(is_left?-1:1));
+		if(stereo_on==1)
+		{
+			iso->SetAnag(anag,is_left);
+		}
+	}
+	
+	
+
+	cam.SetupPosition();
+	
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+	
+	
+	SetLight(iso->GetLightDir());
+
+	int cur_rm = iso->GetCurRMID();
+	
+		vec3 bb1=iso->GetBoundingBox(0),bb2=iso->GetBoundingBox(1);
+		if(draw_frame_is && !stereo_on)
+		{
+
+			
+				DrawLightSources();
+			glEnable(GL_DEPTH_TEST);
+			DrawCS1();
+			DrawGrid(bb1,bb2,10/DicomReader::GetScale());
+			//bc_Draw();
+
+			if(use_bounding_mesh && draw_bounding_mesh)
+				seg_Draw();
+		
+		}
+		
+		iso->Draw(draw_small_data);
+
+
+	
+
+		if(rendering_to_file)
+		{
+			glReadBuffer(GL_BACK);
+			int width1=width;
+			int height1=height;
+			int psize=4;
+
+			unsigned char *dt0 = new unsigned char [width1*height1*psize];
+			unsigned char *dt = new unsigned char [width1*height1*psize];
+
+			glReadPixels(0, 0, width1,height1, GL_RGBA,GL_UNSIGNED_BYTE,dt0);	
+			
+			//for(int i=0;i<height1;i++)
+			//	memcpy(dt+(height1-i-1)*width1*psize,dt0+i*width1*psize,width1*psize);
+			for(int i=0;i<height1;i++)
+				for(int j=0;j<width1;j++)
+				for(int k=0;k<3;k++)
+				{
+					dt[(j+i*width1)*3+k] = dt0[(j+(height1-i-1)*width1)*4+k];
+				//memcpy(dt+(height1-i-1)*width1*psize,dt0+i*width1*psize,width1*psize);
+				}
+			wxImage img(width1,height1,dt,true);
+			wxBitmap bp(img);
+			bp.SaveFile(screenshot_dst,wxBITMAP_TYPE_PNG);
+			delete[]dt;
+			delete[]dt0;
+		}
+			/*
+	glDisable(GL_LIGHTING);
+	glDisable(GL_DEPTH_TEST);
+	glViewport(0,0,width,height);
+	Begin2D(width,height);
+
+	if(!is_changing_box)
+	if(use_bounding_mesh && (CT::mouse.btn&1) && !RM_pic_man )
+	{
+		glColor4f(1,1,1,0.6f);
+		DrawRectangle(vec2(old_mouse_pos.x,old_mouse_pos.y),vec2(mouse.oldx,mouse.oldy));
+	}
+	End2D();
+	glEnable(GL_DEPTH_TEST);
+
+	*/
+
+	if(stereo_on)
+		cam.SetCenter(ps);
+
+
+}
 void DrawScene()
 {
 
@@ -200,7 +299,7 @@ void DrawScene()
 			DrawLine(marker-vec3(0,1,0),marker+vec3(0,1,0));
 			DrawLine(marker-vec3(0,0,1),marker+vec3(0,0,1));
 */
-			if(!light_to_camera)
+			
 				DrawLightSources();
 			glEnable(GL_DEPTH_TEST);
 			DrawCS1();

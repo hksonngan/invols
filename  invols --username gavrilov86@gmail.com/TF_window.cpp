@@ -38,8 +38,11 @@ TF_window::TF_window(wxWindow *parent, wxWindowID id,const wxPoint& pos, const w
 {
 	inst=this;
 	hist2d_br=1;
-	scale = 500;
-	center = 0;
+	for(int i=0;i<MAX_VD_NUMBER;i++)
+	{
+		tf_scale[i] = 500;
+		tf_center[i] = 0;
+	}
 	sel_obj=-1;
 	selected_obj=-1;
 
@@ -167,6 +170,7 @@ tfInfoWindow::tfInfoWindow(wxWindow* parent)
 	btn_del->SetToolTip(MY_TXT("Delete","Удалить"));
 	btn_color->SetToolTip(MY_TXT("Color","Задать цвет"));
 	tbtn_show_histogram->SetToolTip(MY_TXT("Build 2D Histogram","Построить 2D гистограмму"));
+	tbtn_show_histogram->Show(0);
 
 	wxSizer* sz = new wxBoxSizer(wxHORIZONTAL);
 	wxSizer* sz1 = new wxBoxSizer(wxVERTICAL);
@@ -289,8 +293,9 @@ void tfInfoWindow::OnBtnShowHistogram(wxCommandEvent& event)
 void tfInfoWindow::OnBtnColor(wxCommandEvent& event)
 {
 	if(tf->selected_obj==-1)return;
-	wxColor c1 = MyApp::frame->SelectColour(),c0(0,0,0);
-	if(c1!=c0)
+	wxColor c1;
+	
+	if(MyApp::frame->SelectColour(c1))
 	{
 		int i=tf->selected_id;
 		if(tf->selected_obj == SELECTION_OBJECT_TF_POINT)
@@ -390,15 +395,21 @@ void TF_window::UpdateCursor()
 }
 void tfInfoWindow::Save(wxFile& fs)
 {
-	SaveItem(fs,tf->scale);
-	SaveItem(fs,tf->center);
+	for(int i=0;i<MAX_VD_NUMBER;i++)
+	{
+		SaveItem(fs,tf->tf_scale[i]);
+		SaveItem(fs,tf->tf_center[i]);
+	}
 	
 }
 void tfInfoWindow::Load(wxFile& fs)
 {
 	CT::SetCurDataID(0);
-	OpenItem(fs,tf->scale);
-	OpenItem(fs,tf->center);
+	for(int i=0;i<MAX_VD_NUMBER;i++)
+	{
+		OpenItem(fs,tf->tf_scale[i]);
+		OpenItem(fs,tf->tf_center[i]);
+	}
 	
 	
 }
@@ -442,8 +453,11 @@ void tfInfoWindow::SaveTF(wxFile& fs)
 	SaveVector(fs,*tf->isos);
 	SaveVector(fs,*tf->tf_quads);
 	SaveVector(fs,*tf->tf_points);
-	SaveItem(fs,tf->scale);
-	SaveItem(fs,tf->center);
+	for(int i=0;i<MAX_VD_NUMBER;i++)
+	{
+		SaveItem(fs,tf->tf_scale[i]);
+		SaveItem(fs,tf->tf_center[i]);
+	}
 	SaveItem(fs,tf->hist2d_br);
 	SaveItem(fs,win);
 }
@@ -461,8 +475,11 @@ void tfInfoWindow::LoadTF(wxFile& fs)
 	OpenVector(fs,*tf->isos);
 	OpenVector(fs,*tf->tf_quads);
 	OpenVector(fs,*tf->tf_points);
-	OpenItem(fs,tf->scale);
-	OpenItem(fs,tf->center);
+	for(int i=0;i<MAX_VD_NUMBER;i++)
+	{
+		OpenItem(fs,tf->tf_scale[i]);
+		OpenItem(fs,tf->tf_center[i]);
+	}
 	OpenItem(fs,tf->hist2d_br);
 	OpenItem(fs,win);
 

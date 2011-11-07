@@ -235,9 +235,17 @@ glDeleteTextures (1,&texture);
 
 namespace segmentation
 {
-	void Resample()
+	void Resample2()
 	{
 
+	//	ivec3 ns = CPU_VD::full_data.GetSize()/2;
+	//	Progress progress(wxT("Resampling to "+str::ToString(ns.x)+"õ"+str::ToString(ns.y)+"õ"+str::ToString(ns.z)));
+		Progress progress(wxT("Resampling to "));
+		VData dt = GetMipData(CPU_VD::full_data,2);
+		CPU_VD::full_data.Clear();
+		CPU_VD::full_data = dt;
+				
+				
 
 	}
 
@@ -245,7 +253,7 @@ namespace segmentation
 
 	void MedianFilter(VData vd)
 	{
-		VData tmp_vd(vd.GetSize());
+		VData tmp_vd(vd.GetSize(),vd.GetValueFormat());
 		long kernel_radius = 1;//wxGetNumberFromUser( "Enter the kernel radius",										_T("Enter a number:"), _T("Numeric input"),										1, 1, 10, 0 );
 		
 		if ( kernel_radius <= 0 )return;
@@ -305,7 +313,7 @@ namespace segmentation
 	
 	void GaussFilter(VData vd)
 	{
-		VData tmp_vd(vd.GetSize());
+		VData tmp_vd(vd.GetSize(),vd.GetValueFormat());
 		long kernel_radius = 1;//wxGetNumberFromUser( "Enter the kernel radius",										_T("Enter a number:"), _T("Numeric input"),										1, 1, 10, 0 );
 		
 		if ( kernel_radius <= 0 )return;

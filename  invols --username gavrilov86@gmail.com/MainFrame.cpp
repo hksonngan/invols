@@ -11,7 +11,7 @@
 #include "seg_points.h"
 #include "app_state.h"
 
-const int PROFILE_VERSION = 4;
+const int PROFILE_VERSION = 6;
 
 
 BEGIN_EVENT_TABLE(MainFrame, wxFrame)
@@ -116,8 +116,8 @@ MainFrame::MainFrame(wxFrame *frame, const wxString& title, const wxPoint& pos, 
     tb2->SetToolBitmapSize(icon_size);
 	//tb2->AddTool(MYACT_SWITCH_PROJECTION, "", IMG("proj"),wxT(MY_TXT("Perspective projection","Перспективная проекция")),wxITEM_CHECK);
 	//tb2->AddTool(MYACT_ANIMATION, "", IMG("anim"),wxT(MY_TXT("Animation","Анимация")),wxITEM_CHECK);
-	tb2->AddTool(MYACT_RM_PIC_VIEW, "", IMG("RM_pic_view"),wxT(MY_TXT("Rendering methods view","Обзор методов рендеринга")),wxITEM_CHECK);
-	tb2->ToggleTool(MYACT_RM_PIC_VIEW, CT::RM_pic_man);
+//	tb2->AddTool(MYACT_RM_PIC_VIEW, "", IMG("RM_pic_view"),wxT(MY_TXT("Rendering methods view","Обзор методов рендеринга")),wxITEM_CHECK);
+//	tb2->ToggleTool(MYACT_RM_PIC_VIEW, CT::RM_pic_man);
 	tb2->AddTool(MYACT_FULL_SCREEN, "", IMG("fullscreen"),wxT(MY_TXT("Fullscreen mode","Во весь экран")));
     tb2->Realize();
 	m_mgr.AddPane(tb2, wxAuiPaneInfo().Name(wxT("tb2")).Caption(wxT(MY_TXT("View","Вид"))).ToolbarPane().Top());
@@ -493,18 +493,19 @@ void MainFrame::OnFullScreen(wxCommandEvent& event)
 	bb=!bb;
 }
 
-wxColour MainFrame::SelectColour()
+bool MainFrame::SelectColour(wxColour&col)
 {
-    wxColour col(0,0,0);
+    
     wxColourData data;
     wxColourDialog dialog(this, &data);
 
     if ( dialog.ShowModal() == wxID_OK )
     {
         col = dialog.GetColourData().GetColour();
+		return 1;
     }
 
-    return col;
+    return 0;
 }
 void MainFrame::UntoggleMouseToolbars()
 {
@@ -616,7 +617,10 @@ void MainFrame::OnApplyGaussFilter(wxCommandEvent& event)
 }
 void MainFrame::OnApplyResampling(wxCommandEvent& event)
 {
-	segmentation::Resample();
+	segmentation::Resample2();
+	if(auto_gpu_upload)	OnLoadToGPU(event);
+	Update_(1);
+	
 }
 
 void MainFrame::LoadProfile(wxString fname)
@@ -714,10 +718,11 @@ void MainFrame::OnLoadVD(wxCommandEvent& event)
 		{
 			ivec3 data_size = CPU_VD::full_data.GetSize();
 			vec3 data_spacing = CPU_VD::full_data.spacing;
-			CT::LoadRawDataMetrics( fileName, data_size, data_spacing);
+			int value_format = CPU_VD::full_data.GetValueFormat();
+			CT::LoadRawDataMetrics( fileName, data_size, data_spacing,value_format);
 			//
 
-			CT::LoadRawFile(fileName,data_size,data_spacing);
+			CT::LoadRawFile(fileName,data_size,data_spacing,value_format);
 			if(auto_gpu_upload)	OnLoadToGPU(event);
 			Update_(1);
 			fs.Close();
@@ -756,10 +761,13 @@ void MainFrame::OnDotLightToCamera(wxCommandEvent& event)
 }
 void MainFrame::OnBGColor(wxCommandEvent& event)
 {
-	wxColour cc = SelectColour();
-	CT::bg_color.set(cc.Red()/256.0f,cc.Green()/256.0f,cc.Blue()/256.0f);
-	CT::need_rerender=1;
-	CT::need_rerender2d=1;
+	wxColour cc;
+	if(SelectColour(cc))
+	{
+		CT::bg_color.set(cc.Red()/256.0f,cc.Green()/256.0f,cc.Blue()/256.0f);
+		CT::need_rerender=1;
+		CT::need_rerender2d=1;
+	}
 }
 /*
 void MainFrame::OnDropShadows(wxCommandEvent& event)

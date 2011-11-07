@@ -1,5 +1,6 @@
 #include "CT/CT.h"
 #include "Draw2D.h"
+#include "CPU_VD.h"
 
 #include "wxIncludes.h"
 #include "MainFrame.h"
@@ -16,6 +17,8 @@
 
 void TF_window::PutLine(int x1,int y1,int x2,int y2)
 {
+	double scale = tf_scale[CT::GetCurDataID()];
+	double center = tf_center[CT::GetCurDataID()];
 	vec2 win = CT::iso->GetWindow();
 	x1 = TF_WIDTH*(x1/scale+center - win.x)/(win.y-win.x);
 	x2 = TF_WIDTH*(x2/scale+center - win.x)/(win.y-win.x);
@@ -50,6 +53,8 @@ void TF_window::OnMouseEvent(wxMouseEvent& event)
 	
     static int last_x, last_y;
 	static int state;
+	double& scale = tf_scale[CT::GetCurDataID()];
+	double& center = tf_center[CT::GetCurDataID()];
 
 	int height1 = height-TF_MARGIN*2;
 	
@@ -65,7 +70,7 @@ void TF_window::OnMouseEvent(wxMouseEvent& event)
 
 	if(event.GetX()!=last_x || event.GetY()!=last_y)
 	{
-		wxLogStatus(MyApp::frame, _T("%g"), (event.GetX()/scale+center)*(256*128)+data_stat.MinValue);
+		wxLogStatus(MyApp::frame, _T("%g"), (event.GetX()/scale+center)*(256*(CPU_VD::full_data.GetValueFormat()==0?128:1))+data_stat.MinValue);
 
 		if(event.MiddleIsDown() /*|| event.RightIsDown()*/ || (event.LeftIsDown() && cur_action == TF_ACTION_TRANSLATE))
 		{
@@ -87,7 +92,7 @@ void TF_window::OnMouseEvent(wxMouseEvent& event)
 			{
 				float dl = (event.GetX()-last_x)/scale;
 				float dw = (event.GetY()-last_y)/(scale);
-				CT::iso->SetWindow(CT::iso->GetWindow()+vec2(dl-dw,dl+dw));
+				CT::iso->DragWindow(CT::iso->GetWindow()+vec2(dl-dw,dl+dw));
 				CT::need_rerender=1;
 				CT::need_rerender2d=1;
 				CT::need_rerender_tf=1;

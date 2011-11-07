@@ -5,61 +5,112 @@
 #include "CT.h"
 #include "CPU_VD.h"
 
-VData::VData():dt(0),size(0),spacing(1.0/512.0)
+VData::VData():size(0),spacing(1.0/512.0),allocated(0)
 {
 }
-VData::VData(ivec3 n_size):dt(0),size(0),spacing(1.0/512.0)
+VData::VData(ivec3 n_size,int nvalue_format):size(0),spacing(1.0/512.0),allocated(0)
 {
-	Allocate(n_size);
+	Allocate(n_size,nvalue_format);
 }
-void VData::Allocate(ivec3 n_size)
+void VData::Allocate(ivec3 n_size,int nvalue_format)
 {
 	Clear();
+	
+	value_format = nvalue_format;
+	value_size = nvalue_format?1:2;
 	size = n_size;
-	dt = new short*[n_size.z];
+	if(value_format==0)	dt_s = new short*[n_size.z];
+	if(value_format==1)	dt_b = new BYTE*[n_size.z];
 	for(int i=0;i<n_size.z;i++)
-		dt[i] = new short[n_size.x*n_size.y];
+	{
+		if(value_format==0)	dt_s[i] = new short[n_size.x*n_size.y];
+		if(value_format==1)	dt_b[i] = new BYTE[n_size.x*n_size.y];
+	}
+	allocated=1;
+
+}
+void VData::SetAllValues(short val)
+{
+	for(int i=0;i<size.x;i++)
+	for(int j=0;j<size.y;j++)
+	for(int k=0;k<size.z;k++)
+	{
+		SetValue(val,i,j,k);
+	}
 
 }
 void VData::Clear()
 {
-	if(!dt)return;
+	if(!allocated)return;
+	allocated=0;
 	for(int i=0;i<size.z;i++)
-		delete[] dt[i];
-	delete[]dt;
-	dt=0;
+	{
+		if(value_format==0)	delete[] dt_s[i];
+		if(value_format==1)	delete[] dt_b[i];
+	}
+	if(value_format==0)	delete[]dt_s;
+	if(value_format==1)	delete[]dt_b;
 	
 
 }
 void VData::SwapWith(VData vd)
 {
 	swap(spacing,vd.spacing);
-	swap(dt,vd.dt);
+	swap(dt_s,vd.dt_s);
+	swap(dt_b,vd.dt_b);
 	swap(size,vd.size);
+	swap(allocated,vd.allocated);
+	swap(value_format,vd.value_format);
+	swap(value_size,vd.value_size);
 }
 short VData::GetValue(ivec3 id)
 {
-	return *(dt[id.z]+id.x+id.y*size.x);
+	if(value_format==0)
+		return *(dt_s[id.z]+id.x+id.y*size.x);
+	if(value_format==1)
+		return *(dt_b[id.z]+id.x+id.y*size.x);
+	return 0;
 }
 short VData::GetValue(int i,int j,int k)
 {
-	return *(dt[k]+i+j*size.x);
+	if(value_format==0)
+		return *(dt_s[k]+i+j*size.x);
+	if(value_format==1)
+		return *(dt_b[k]+i+j*size.x);
+	return 0;
 }
 void VData::SetValue(short val,ivec3 id)
 {
-	*(dt[id.z]+id.x+id.y*size.x) = val;
+	if(value_format==0)
+		*(dt_s[id.z]+id.x+id.y*size.x) = val;	
+	if(value_format==1)
+		*(dt_b[id.z]+id.x+id.y*size.x) = val;
 }
 void VData::SetValue(short val,int i,int j,int k)
 {
-	*(dt[k]+i+j*size.x) = val;
+	if(value_format==0)
+		*(dt_s[k]+i+j*size.x) = val;
+	if(value_format==1)
+		*(dt_b[k]+i+j*size.x) = val;
 }
-short*VData::GetSlice(int z)
+void*VData::GetSlice(int z)
 {
-	return dt[z];
+	if(!allocated)return 0;
+	if(value_format==0)
+		return dt_s[z];
+	if(value_format==1)
+		return dt_b[z];
+	return 0;
+
 }
-short**VData::GetSlices()
+void**VData::GetSlices()
 {
-	return dt;
+	if(!allocated)return 0;
+	if(value_format==0)
+		return (void**)dt_s;
+	if(value_format==1)
+		return (void**)dt_b;
+	return 0;
 }
 ivec3 VData::GetSize()
 {
@@ -108,7 +159,33 @@ short* GetSubData(VData& data,ivec3& pos,ivec3& sub_size)
 
 	return res;
 }
+BYTE* byte_GetSubData(VData& data,ivec3& pos,ivec3& sub_size)
+{
+	ivec3 size = data.GetSize();
+	if(sub_size.x&1){sub_size.x--;}
+	if(sub_size.y&1){sub_size.y--;}
+	if(sub_size.z&1){sub_size.z--;}
+	pos = ivec3::Min(pos,size-ivec3(1));
+	sub_size = sub_size - ivec3::Max(pos+sub_size-size,ivec3(0));
+	BYTE*res=0,*res1=res;
+	
+	res = new BYTE[sub_size.x*sub_size.y*sub_size.z];
+	
+	res1=res;
+	
+	for(int k=0;k<sub_size.z;k++)
+	for(int j=0;j<sub_size.y;j++)
+	for(int i=0;i<sub_size.x;i++)
+	{
+//		if(i+pos.x<0 || i+pos.x>=size.x || j+pos.y<0 || j+pos.y>=size.y || k+pos.z<0 || k+pos.z>=size.z)
+//			*res1=0;
+//		else
+		*res1 = data.GetValue(pos+ivec3(i,j,k));
+		res1++;
+	}
 
+	return res;
+}
 
 /*
 template <class T>
@@ -264,16 +341,17 @@ void VolumeData::Upload(VData& data)//data_type: 0-UBYTE 2-short
 	size = data.GetSize();
 	
 	if(st)delete st;
-	unsigned int tp = GL_SHORT;
-	int type_size = 2;
+	int df = data.GetValueFormat();
+//	int type_size = 2;
 	
 	void*tmpp;
 
 	ivec3 sub_size = CPU_VD::gpu_size_dummy;
 	ivec3 pos = CPU_VD::GetRecomendedGPUOffset();
 	sub_size = ivec3::Min(sub_size,size);
-	short*sub_data;
-	sub_data = GetSubData(data,pos,sub_size);
+	void*sub_data;
+	if(df==0) sub_data = GetSubData(data,pos,sub_size);
+	else sub_data = byte_GetSubData(data,pos,sub_size);
 	
 
 	CPU_VD::gpu_size = sub_size;
@@ -281,7 +359,7 @@ void VolumeData::Upload(VData& data)//data_type: 0-UBYTE 2-short
 	CPU_VD::CalcReal();
 
 	
-	st = new SimText3D(3,sub_size.x,sub_size.y,sub_size.z,1,sub_data,1,true,GL_SHORT);
+	st = new SimText3D(3,sub_size.x,sub_size.y,sub_size.z,1,sub_data,1,true,data.GetGLFormat());
 
 	delete[]sub_data;
 

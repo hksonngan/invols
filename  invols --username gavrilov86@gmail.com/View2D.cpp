@@ -37,9 +37,8 @@ View2D::View2D(wxWindow *parent, wxWindowID id,const wxPoint& pos, const wxSize&
 	mirror.set(1,1);
 	txt2 = 0;
 //	txt_reg = 0;
-	sum=0;
+
 	to_show=0;
-	mip=0;
 	gl_inited=0;
 	scale = 1;
 	cur_slice = 156;
@@ -121,9 +120,9 @@ void View2D::OnKeyUp(wxKeyEvent& event)
 View2D::~View2D()
 {
 	if(txt2)delete txt2;	
+	mip.Clear();
+	sum.Clear();
 //	if(txt_reg)delete txt_reg;	
-	if(sum)delete[]sum;
-	if(mip)delete[]mip;
 }
 
 vec2 View2D::Get2DBoxMin()
@@ -159,14 +158,17 @@ void View2D::LoadTexture()
 	if(cur_slice<0 || cur_slice>=size.GetByID(axis))return;
 	if(txt2)delete txt2;
 	int ww = size.GetByID(axis_x),hh = size.GetByID(axis_y);
-	short* data;
+	
+	VData data(ivec3(ww,hh,1),CPU_VD::full_data.GetValueFormat());
+	void *dt;
+	
 	if(to_show==0)
 	{
 	if(axis==2)
-		data = CPU_VD::full_data.GetSlice(cur_slice);
+		dt = CPU_VD::full_data.GetSlice(cur_slice);
 	else
 	{
-		data = new short[ww*hh];
+		dt = data.GetSlice(0);
 		
 		if(axis==0)
 		{//ww-y//hh-z
@@ -174,31 +176,31 @@ void View2D::LoadTexture()
 			for(int i=0;i<ww;i++)
 			{
 				//data[i+ww*j] = *(CPU_VD::full_data.g + cur_slice + size.x*(i+j*size.y));
-				data[i+ww*j] = CPU_VD::full_data.GetValue(cur_slice,i,j);
+				data.SetValue(CPU_VD::full_data.GetValue(cur_slice,i,j), i,j,0);
 			}
 		}else
 			for(int j=0;j<size.z;j++)
 			for(int i=0;i<size.x;i++)
 			{
 				//data[i+ww*j] = *(CPU_VD::full_data + i + size.x*(cur_slice+j*size.y));
-				data[i+ww*j] = CPU_VD::full_data.GetValue(i,cur_slice,j);
+				data.SetValue(CPU_VD::full_data.GetValue(i,cur_slice,j), i,j,0);
 			}
 	}
 	}else
 	if(to_show==1)
 	{
-		if(!sum)UpdateSumMip();
-		data = sum;
+		if(!sum.GetSlices())UpdateSumMip();
+		dt = sum.GetSlice(0);
 	}else
 	if(to_show==2)
 	{
-		if(!mip)UpdateSumMip();
-		data = mip;
+		if(!mip.GetSlices())UpdateSumMip();
+		dt = mip.GetSlice(0);
 	}
 
-	txt2 = new SimText3D(2,ww,hh,1,1,data,0,1,GL_SHORT);
-	if(to_show==0) if(axis!=2)delete[]data;
+	txt2 = new SimText3D(2,ww,hh,1,1,dt,0,1,data.GetGLFormat());
 
+	data.Clear();
 }
 /*void View2D::LoadTextureReg()
 {
@@ -245,18 +247,16 @@ void View2D::UpdateSumMip()
 	Progress::inst->AddText(wxT("init"));
 	ivec3 size = CPU_VD::full_data.GetSize();
 
-	if(!sum)delete[]sum;
-	if(!mip)delete[]mip;
 	int ww = size.GetByID(axis_x),hh = size.GetByID(axis_y),dd = size.GetByID(axis);
 	short* data;
-	sum = new short[ww*hh];
-	mip = new short[ww*hh];
+	sum.Allocate(ivec3(ww,hh,1),CPU_VD::full_data.GetValueFormat());
+	mip.Allocate(ivec3(ww,hh,1),CPU_VD::full_data.GetValueFormat());
 	int* sum1 = new int[ww*hh];
 	for(int i=0;i<ww*hh;i++)
 	{
 		sum1[i]=0;
-		mip[i]=0;
 	}
+	mip.SetAllValues(0);
 	ivec3 bb1 = ivec3(0);//CT::GetBoundingBox(0);
 	ivec3 bb2 = CPU_VD::full_data.GetSize()-ivec3(1);//CT::GetBoundingBox(1);
 	ivec3 id;
@@ -274,8 +274,8 @@ void View2D::UpdateSumMip()
 		{
 			int idd = *idx+ww**idy;
 			sum1[idd] += val;
-			short*tmp=mip+idd;
-			*tmp=max(*tmp,val);
+			short tmp=mip.GetValue(*idx,*idy,0);
+			if(tmp<val)mip.SetValue(val,*idx,*idy,0);
 		}
 		
 	}
@@ -284,7 +284,7 @@ void View2D::UpdateSumMip()
 	dd/=2;
 	for(int i=0;i<ww*hh;i++)
 	{
-		sum[i]=sum1[i]/dd;
+		sum.SetValue(sum1[i]/dd,i%ww,i/ww,0);
 	}
 	delete[]sum1;
 }

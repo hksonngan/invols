@@ -134,7 +134,7 @@ bool LoadDICOMDIR(wxString dicom_dir)
 			
 			Progress::inst->AddText("Allocating memory ("+str::ToString((size.x*size.y*size.z*2)/(1024*1024))+"Mb)<br>");
 			arri = new short[size.x*size.y];
-			CPU_VD::full_data.Allocate(size);
+			CPU_VD::full_data.Allocate(size,0);
 
 			
 

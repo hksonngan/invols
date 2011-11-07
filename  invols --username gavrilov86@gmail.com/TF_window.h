@@ -70,7 +70,7 @@ public:
 	std::vector<TF_QUAD>* tf_quads;
 	std::vector<TF_POINT>* tf_points;
 	
-	double scale,center;
+	double tf_scale[MAX_VD_NUMBER],tf_center[MAX_VD_NUMBER];
 	
 	short start_view,end_view;
 

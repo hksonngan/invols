@@ -65,7 +65,7 @@ public:
 
 	virtual ~MainFrame();
 
-	wxColour SelectColour();
+	bool SelectColour(wxColour&col);
 
 	///void OnBtnColor1(wxCommandEvent& WXUNUSED(event));
 	//void OnBtnColor2(wxCommandEvent& WXUNUSED(event));

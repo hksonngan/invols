@@ -100,7 +100,7 @@ namespace segmentation
 
 	void MedianFilter(VData vd);
 	void GaussFilter(VData vd);
-	void Resample();
+	void Resample2();
 
 }
 extern DataStat data_stat;

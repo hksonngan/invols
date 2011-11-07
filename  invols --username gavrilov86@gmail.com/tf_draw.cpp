@@ -16,6 +16,9 @@
 
 void TF_window::OnPaint( wxPaintEvent& WXUNUSED(event) )
 {
+	double scale = tf_scale[CT::GetCurDataID()];
+	double center = tf_center[CT::GetCurDataID()];
+
     wxPaintDC dc(this);
     SetCurrent();
 	//if(MyApp::gl_window)MyApp::gl_window->GetContext();else
@@ -85,7 +88,9 @@ void TF_window::OnPaint( wxPaintEvent& WXUNUSED(event) )
 	{
 	glBegin(GL_QUADS);
 	glColor4f(1,1,1,0.4);
-	float step=scale/(256.0f*128.0f/histogram.chunk_size);
+	float step;
+	if(CPU_VD::full_data.GetValueFormat()==0)step=scale/(256.0f*128.0f/histogram.chunk_size);
+	if(CPU_VD::full_data.GetValueFormat()==1)step=scale/(256.0f/histogram.chunk_size);
 	float cx = (-center)*scale;
 	float scsc = height1/float(histogram.GetMaxChunk());
 	unsigned int*ch = histogram.Get();
@@ -123,7 +128,9 @@ void TF_window::OnPaint( wxPaintEvent& WXUNUSED(event) )
 		*/
 		
 		unsigned int*hist = histogram2D.Get();
-		float step=scale/(256.0f*128.0f/histogram2D.chunk_size.x);
+		float step;
+		if(CPU_VD::full_data.GetValueFormat()==0)step=scale/(256.0f*128.0f/histogram2D.chunk_size.x);
+		if(CPU_VD::full_data.GetValueFormat()==1)step=scale/(256.0f/histogram2D.chunk_size.x);
 		float cx = (-center)*scale;
 		float cy = height1+TF_MARGIN;
 		ivec2 hist_size = histogram2D.GetSize();
@@ -321,7 +328,9 @@ void TF_window::OnPaint( wxPaintEvent& WXUNUSED(event) )
 	*/
 	
 	float cx = (-center)*scale;
-	float step=scale/(256.0f*128.0f);
+	float step;
+	if(CPU_VD::full_data.GetValueFormat()==0) step = scale/(256.0f*128.0f);
+	if(CPU_VD::full_data.GetValueFormat()==1) step = scale/(256.0f);
 	int grid_step = 1000;
 	if(scale>1000)grid_step = 100;
 	if(scale>10000)grid_step = 10;
@@ -383,9 +392,9 @@ void TF_window::OnPaint( wxPaintEvent& WXUNUSED(event) )
 		DrawRectangle(vec2((part?w.y:w.x)-1,TF_MARGIN),vec2((part?w.y:w.x)+1,TF_MARGIN+height1));
 	}
 	
-	glColor4f(1,1,1,0.4f);
-	DrawFilledRectangle(vec2(0,0),vec2(w.x,height));
-	DrawFilledRectangle(vec2(w.y,0),vec2(width,height));
+//	glColor4f(1,1,1,0.4f);
+//	DrawFilledRectangle(vec2(0,0),vec2(w.x,height));
+//	DrawFilledRectangle(vec2(w.y,0),vec2(width,height));
 
 	//DrawText("DR SD",vec2(12,32),vec4(0.6f));
 
