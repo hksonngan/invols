@@ -399,13 +399,32 @@ void Render::SetBoundingBox(vec3 a,vec3 b)
 }
 void Render::SetWindow(vec2 w,int id)
 {
-	if(w.x>w.y)w.x=w.y=(w.x+w.y)*0.5f;
+	if(w.x>=w.y){w.x=w.y=(w.x+w.y)*0.5f;w.y+=0.0001;w.x-=0.0001;}
 	GetCurRM()->min_level[id] = w.x;
 	GetCurRM()->max_level[id] = w.y;
 }
 void Render::SetWindow(vec2 level)
 {
 	SetWindow(level,CT::GetCurDataID());
+}
+void Render::DragWindow(vec2 w,int id)
+{
+	RenderingMethod*rm = GetCurRM();
+	vec2 w0(rm->min_level[id],rm->max_level[id]);
+	SetWindow(w,id);
+	vec2 w1(rm->min_level[id],rm->max_level[id]);
+
+	for(int i=0;i<rm->tf_points[id].size();i++)
+	{
+		rm->tf_points[id][i].value = (w1.y-w1.x)*(rm->tf_points[id][i].value-w0.x)/(w0.y-w0.x)+w1.x;
+	}
+	rm->ApplyPoints();
+		
+	
+}
+void Render::DragWindow(vec2 level)
+{
+	DragWindow(level,CT::GetCurDataID());
 }
 vec2 Render::GetWindow(int id)
 {
@@ -454,7 +473,7 @@ void Render::Draw(bool is_small)
 	}
 
 	vec3 pp,ll,tt;
-	float kf = 0.4f;
+	float kf = 0.5f;
 	pp = CT::cam.GetPosition()+CT::cam.GetNav()*kf;
 	if(CT::cam.GetProjection())
 	{

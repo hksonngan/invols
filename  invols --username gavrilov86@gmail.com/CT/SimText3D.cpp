@@ -121,6 +121,7 @@ SimText3D::SimText3D(int dim_num1,int w,int h,int d,int pixel_size,void* data,in
 //texture_format=GL_LUMINANCE_INTEGER_EXT;
 //internal_format=GL_LUMINANCE16I_EXT;
 			internal_format=GL_LUMINANCE16;
+			//internal_format=GL_LUMINANCE8;
 
 			//internal_format=GL_ALPHA16F_ARB;
 			//internal_format=GL_ALPHA16;

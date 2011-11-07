@@ -87,8 +87,8 @@ namespace CT
 	void SetupGL();
 	void SetProjection(bool mode);
 
-	void LoadRawFile(wxString fn, ivec3 data_size, vec3 spacing,int offset=0);
-	bool LoadRawDataMetrics(wxString fileName,ivec3& data_size,vec3& data_spacing);
+	void LoadRawFile(wxString fn, ivec3 data_size, vec3 spacing,int value_format,int offset=0);
+	bool LoadRawDataMetrics(wxString fileName,ivec3& data_size,vec3& data_spacing,int& value_format);
 	void UploadVD(int id);
 	void Update_rtt();
 	vec3 GetCenter();

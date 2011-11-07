@@ -108,6 +108,8 @@ public:
 
 	void SetWindow(vec2 level,int id);
 	void SetWindow(vec2 level);
+	void DragWindow(vec2 level,int id);
+	void DragWindow(vec2 level);
 	vec2 GetWindow(int id);
 	vec2 GetWindow();
 

@@ -25,6 +25,7 @@ uniform vec3 cs_center[$VD_NUMBER];
 uniform vec3 cs_x[$VD_NUMBER];
 uniform vec3 cs_y[$VD_NUMBER];
 uniform vec3 cs_z[$VD_NUMBER];
+
 uniform sampler3D f_text1;
 uniform sampler3D f_text2;
 
@@ -110,10 +111,24 @@ float interpolate_cubic(sampler3D tex, vec3 coord,vec3 cell_size1)
 	return mix(tex100, tex000, g0.x);
 }
 //#endif
+/*
+vec3 ToTextureSpace(vec3 ps,int id)
+{return ps;}
+vec3 ToTextureSpace1(vec3 ps,int id)
+{return ps;}
+*/
+
 vec3 ToTextureSpace(vec3 ps,int id)
 {
+
 	mat3 mm = mat3(cs_x[id],cs_y[id],cs_z[id]);
 	return mm*(ps-cs_center[id]);//(mm*vec4(ps,1.0)-gpu_box1[id])/(gpu_box2[id]-gpu_box1[id]);
+}
+vec3 ToTextureSpace_1(vec3 ps,int id)
+{
+	mat3 mm = mat3(cs_x[id],cs_y[id],cs_z[id]);
+	
+	return ps*mm+cs_center[id];
 }
 vec3 ToTextureSpace1(vec3 ps,int id)
 {
@@ -128,6 +143,8 @@ float FastEqu(vec3 arg,int id,sampler3D tex)
 }
 float Equ(vec3 arg,int id,sampler3D tex)
 {
+//return sin(length(arg)/0.2);
+
 	vec3 coord=ToTextureSpace(arg,id);
 	if(coord==clamp(coord,vec3(0.01),vec3(0.99)))
 	{
@@ -139,6 +156,7 @@ float Equ(vec3 arg,int id,sampler3D tex)
 	}
 	else
 		return 0.0;
+	
 }
 float EquTF(vec3 arg,int id)
 {

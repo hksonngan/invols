@@ -9,78 +9,56 @@ void main()
 	vec3 ray = nav;
 	vec4 ps = vec4(vertex,0.0);
 #endif
-	float start=1000.0,final=0.0;
+	float start=1000.0,final=0.0,s,f;
 	int id;
 	//vec2 livetime[$VD_NUMBER];
-	bool inter[$VD_NUMBER];
 
 	vec3 color = vec3(0.0),norm;
 	vec4 step  = vec4(ray*step_length,step_length),cl;
 	float ddd=step_length*1500.0;
-	float alpha = 0.0,s,f;
-	float e[$VD_NUMBER],e0[$VD_NUMBER];
+	float alpha = 0.0;
+	float e0[$VD_NUMBER];
 
-	for(id=0;id<$VD_NUMBER;id++)
 	{
-		e[id] = 0.0;
-		inter[id] = IntersectBox (ToTextureSpace(ps.xyz,id), ToTextureSpace1(ray,id),vec3(0.0),vec3(1.0), s,f );
-		if(inter[id])
+		
+		
+		if(IntersectBox (ToTextureSpace(ps.xyz,0), ToTextureSpace1(ray,0),vec3(0.0),vec3(1.0), s,f ))
 		{
 			start = min(start,s);
 			final = max(final,f);
 		}
+		#if $VD_NUMBER>1
+		if(IntersectBox (ToTextureSpace(ps.xyz,1), ToTextureSpace1(ray,1),vec3(0.0),vec3(1.0), s,f ))
+		{
+			start = min(start,s);
+			final = max(final,f);
+		}
+		#endif
 	}
-	if(id!=0 && IntersectBox (ps.xyz,ray,box1,box2,s,f ))
+	
+	id=0;
+	if(IntersectBox (ps.xyz,ray,box1,box2,s,f ))
 	{
 		start = max(start,s);
 		final = min(final,f);
-		float start0 = start;
-		float final0 = final;
-		float mid_t=0.0;
-		f=0.0;
-		vec4 ps0 = ps;
-//		gl_FragDepth = 1.0;
+		ps = ps + step*(start/step_length);
 		
-#if USE_BOUNDING_MESH!=0
-		vec4 front_face_dist = texture2D(front_dist_txt,text_coord);
-		vec4 back_face_dist = texture2D(back_dist_txt,text_coord);
-		if(front_face_dist.x>back_face_dist.x)front_face_dist = vec4(0.0,front_face_dist.xyz);
-
-		for(int otr=0;otr<4;otr++)
-		{
-//			vec3 nrm = CalcNormByDist(ps0.xyz,ray,otr);
-
-			start = max(f,front_face_dist[otr]);
-			final = back_face_dist[otr];
-			f=final;
+		ps = ps + step*(1.0+rand(vec4(vertex,ps.w)));
 			
-			if(final<=start)break;
 			
-			start = max(start,start0);
-			final = min(final,final0);
-#endif
-		
-			ps = ps0 + step*(start/step_length);
-		
-			ps = ps + step*(1.0+rand(vec4(vertex,ps.w)));
-			id=0;
-			while(ps.w <final)
+			for ( float itt = 0.0; itt < float ( 1024.0 ); itt+=1.0 )
 			{
+				if(ps.w >=final)break;
+				//alpha+=0.1;
 			
 				//for(id=0;id<$VD_NUMBER;id++)
 				//if(inter[id])
 
-				{
+				
 					e0[id] = Equ(ps.xyz,id,f_text1);
-					e[id] = ((e0[id]-min_level[id])/(max_level[id]-min_level[id]));
-					if(e[id]>0.0)
-					{
-						#if $tf_type==0
-						cl =  vec4(e[id]);
-						#endif
-						#if $tf_type==1
+					//if(e0[id] == clamp(e0[id],tf_ww[id].x,tf_ww.y)
+					
 						cl =  GetLevelColor(e0[id],id);
-						#endif
 
 						cl.w *= ddd*opacity[id];
 						#if $shade_mode==1
@@ -91,30 +69,45 @@ void main()
 						#endif
 						float d_alpha = (1.0-alpha) * cl.w;
 						//if(alpha==0.0 && d_alpha!=0.0)gl_FragDepth = max(GetDepth(ps.xyz),0.1);
-						mid_t += d_alpha*ps.w;
+						//mid_t += d_alpha*ps.w;
 						color = color + d_alpha * cl.xyz;
 						
 						alpha = alpha + d_alpha;
+					
+					
+						#if $VD_NUMBER>1
+				id=1;
+					e0[id] = Equ(ps.xyz,id,f_text2);
+					//if(e0[id] == clamp(e0[id],tf_ww[id].x,tf_ww.y)
+					
+						cl =  GetLevelColor(e0[id],id);
+
+						cl.w *= ddd*opacity[id];
+						#if $shade_mode==1
+							norm = normalize(GradEqu1(e0[id],ps.xyz,id,f_text2)+vec3(0.000001));
+							//cl.xyz = mix(Phong(ps.xyz,-norm,cl.xyz),Phong(ps.xyz,nrm,cl.xyz),max(start-ps.w+0.02,0.0)/0.02);
+							if(dot(norm,ray)<0)norm=-norm;
+							cl.xyz = Phong(ps.xyz,-norm,cl.xyz);
+						#endif
+						d_alpha = (1.0-alpha) * cl.w;
+						//if(alpha==0.0 && d_alpha!=0.0)gl_FragDepth = max(GetDepth(ps.xyz),0.1);
+						//mid_t += d_alpha*ps.w;
+						color = color + d_alpha * cl.xyz;
+						
+						alpha = alpha + d_alpha;
+
+				id=0;
+				#endif
+				
 						if(alpha>0.95)
 						{
 							alpha=1.0;
 							break;
 						}
-					}
-					
-						
-				}
-				
-				
-				
+
 				ps += step;
 			}
 			
-#if USE_BOUNDING_MESH!=0
-
-			if(alpha==1.0)break;
-		}
-#endif		
 		
 
 		//		color.x = texture2D(front_dist_txt,text_coord).x;
