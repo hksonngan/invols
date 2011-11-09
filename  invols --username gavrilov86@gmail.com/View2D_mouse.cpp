@@ -139,6 +139,7 @@ void View2D::OnMouseEvent(wxMouseEvent& event)
 		/////////////// hover
 		int old_s = sel_obj + sel_part*100 + sel_id*10;
 		sel_obj=-1;
+		
 
 		if(cur_action == V2D_ACTION_ARROW)
 		{
@@ -222,7 +223,7 @@ void View2D::OnMouseEvent(wxMouseEvent& event)
 			selected_id = sel_id;
 			selected_part = sel_part;
 			
-		}
+		}else selected_obj=-1;
 		
 		MyRefresh();
 	}

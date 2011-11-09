@@ -12,20 +12,20 @@ uniform float screen_height;
 uniform vec3 RFrom;
 uniform vec3 GFrom;
 uniform vec3 BFrom;
-uniform float max_level[2],min_level[2];
-uniform vec3 cell_size[2];
-uniform vec3 cs_center[2];
-uniform vec3 cs_x[2];
-uniform vec3 cs_y[2];
-uniform vec3 cs_z[2];
+uniform float max_level[1],min_level[1];
+uniform vec3 cell_size[1];
+uniform vec3 cs_center[1];
+uniform vec3 cs_x[1];
+uniform vec3 cs_y[1];
+uniform vec3 cs_z[1];
 uniform sampler3D f_text1;
 uniform sampler3D f_text2;
 uniform sampler3D f_text_i;
 uniform sampler3D f_text_tf;
-uniform float opacity[2];
-uniform int IsoLast[2];
-uniform int QuadLast[2];
-uniform vec2 tf_ww[2];
+uniform float opacity[1];
+uniform int IsoLast[1];
+uniform int QuadLast[1];
+uniform vec2 tf_ww[1];
 uniform vec3 LightDir;
 uniform sampler2D txt_level_color;
 uniform sampler2D front_dist_txt;
@@ -45,7 +45,7 @@ vec4 GetLevelColor(float lv,int id)
 	return texture2D(txt_level_color, vec2(clamp((lv-tf_ww[id].x)/(tf_ww[id].y-tf_ww[id].x),1.0/512.0,511.0/512.0),(float(id)+0.5)/4.0));
 	
 }
-//#if 0!=0
+//#if 1!=0
 float interpolate_cubic(sampler3D tex, vec3 coord,vec3 cell_size1)
 {
 	
@@ -90,10 +90,22 @@ float interpolate_cubic(sampler3D tex, vec3 coord,vec3 cell_size1)
 	return mix(tex100, tex000, g0.x);
 }
 //#endif
+/*
+vec3 ToTextureSpace(vec3 ps,int id)
+{return ps;}
+vec3 ToTextureSpace1(vec3 ps,int id)
+{return ps;}
+*/
 vec3 ToTextureSpace(vec3 ps,int id)
 {
 	mat3 mm = mat3(cs_x[id],cs_y[id],cs_z[id]);
 	return mm*(ps-cs_center[id]);//(mm*vec4(ps,1.0)-gpu_box1[id])/(gpu_box2[id]-gpu_box1[id]);
+}
+vec3 ToTextureSpace_1(vec3 ps,int id)
+{
+	mat3 mm = mat3(cs_x[id],cs_y[id],cs_z[id]);
+	
+	return ps*mm+cs_center[id];
 }
 vec3 ToTextureSpace1(vec3 ps,int id)
 {
@@ -107,10 +119,11 @@ float FastEqu(vec3 arg,int id,sampler3D tex)
 }
 float Equ(vec3 arg,int id,sampler3D tex)
 {
+//return sin(length(arg)/0.2);
 	vec3 coord=ToTextureSpace(arg,id);
 	if(coord==clamp(coord,vec3(0.01),vec3(0.99)))
 	{
-		#if 0==0
+		#if 1==0
 			return texture3D(tex, coord).x;
 		#else
 			return interpolate_cubic(tex,coord,cell_size[id]);
@@ -118,13 +131,14 @@ float Equ(vec3 arg,int id,sampler3D tex)
 	}
 	else
 		return 0.0;
+	
 }
 float EquTF(vec3 arg,int id)
 {
 	vec3 coord=ToTextureSpace(arg,id);
 	if(coord==clamp(coord,vec3(0.0),vec3(1.0)))
 	{
-		#if 0==0
+		#if 1==0
 			return texture3D(f_text_tf, coord).x;
 		#else
 			return interpolate_cubic(f_text_tf,coord,vec3(1.0/256.0));
@@ -139,7 +153,7 @@ vec2 Equ2(vec3 arg,int id)
 	vec3 coord=ToTextureSpace(arg,id);
 	if(coord==clamp(coord,vec3(0.0),vec3(1.0)))
 	{
-		#if 0==0
+		#if 1==0
 			return vec2(texture3D(f_text, coord).x,texture3D(f_text_tf[id], coord).x);
 		#else
 			return vec2(interpolate_cubic(f_text,coord,cell_size[id]),interpolate_cubic(f_text_tf[id],coord,vec3(1.0/256.0)));
@@ -162,7 +176,7 @@ float EquF(sampler3D tex, vec3 arg)
 {
 vec3 coord=ToTextureSpace(arg);
 	if(coord==clamp(coord,vec3(0.0),vec3(1.0)))
-#if 0==0
+#if 1==0
 	return texture3D(tex, ToTextureSpace(arg)).x;
 #else
 	return interpolate_cubic(tex, ToTextureSpace(arg));
@@ -223,6 +237,23 @@ float rand(vec4 co)
 {
 	return fract(sin(dot(co,random_seed)) * 1000.0);
 }
+float GetShadness1(vec3 pt,vec3 step)
+{
+	float ddd=step_length*300.0;
+	
+	float e,alpha=0.0,ww;
+	
+	for ( float itt = 0.0; itt < float ( 10.0 ); itt+=1.0 )
+	{
+		pt += step;
+		if(!(clamp(pt,box1,box2)==pt))break;
+		step*=1.3;
+		e = Equ(pt,0,f_text1);
+		ww = GetLevelColor(e,0).w*ddd;
+		alpha = alpha + (1.0-alpha) * ww;
+	}
+	return alpha;
+}
 void main()
 {
 #if 1==1
@@ -232,110 +263,107 @@ void main()
 	vec3 ray = nav;
 	vec4 ps = vec4(vertex,0.0);
 #endif
-	float start=1000.0,final=0.0;
+	float start=1000.0,final=0.0,s,f;
 	int id;
-	//vec2 livetime[2];
-	bool inter[2];
+	//vec2 livetime[1];
 	vec3 color = vec3(0.0),norm;
 	vec4 step  = vec4(ray*step_length,step_length),cl;
 	float ddd=step_length*1500.0;
-	float alpha = 0.0,s,f;
-	float e[2],e0[2];
-	for(id=0;id<2;id++)
+	float alpha = 0.0;
+	float e0[1];
 	{
-		e[id] = 0.0;
-		inter[id] = IntersectBox (ToTextureSpace(ps.xyz,id), ToTextureSpace1(ray,id),vec3(0.0),vec3(1.0), s,f );
-		if(inter[id])
+		
+		
+		if(IntersectBox (ToTextureSpace(ps.xyz,0), ToTextureSpace1(ray,0),vec3(0.0),vec3(1.0), s,f ))
 		{
 			start = min(start,s);
 			final = max(final,f);
 		}
+		#if 1>1
+		if(IntersectBox (ToTextureSpace(ps.xyz,1), ToTextureSpace1(ray,1),vec3(0.0),vec3(1.0), s,f ))
+		{
+			start = min(start,s);
+			final = max(final,f);
+		}
+		#endif
 	}
-	if(id!=0 && IntersectBox (ps.xyz,ray,box1,box2,s,f ))
+	
+	id=0;
+	if(IntersectBox (ps.xyz,ray,box1,box2,s,f ))
 	{
 		start = max(start,s);
 		final = min(final,f);
-		float start0 = start;
-		float final0 = final;
-		float mid_t=0.0;
-		f=0.0;
-		vec4 ps0 = ps;
-//		gl_FragDepth = 1.0;
+		ps = ps + step*(start/step_length);
 		
-#if 0!=0
-		vec4 front_face_dist = texture2D(front_dist_txt,text_coord);
-		vec4 back_face_dist = texture2D(back_dist_txt,text_coord);
-		if(front_face_dist.x>back_face_dist.x)front_face_dist = vec4(0.0,front_face_dist.xyz);
-		for(int otr=0;otr<4;otr++)
-		{
-//			vec3 nrm = CalcNormByDist(ps0.xyz,ray,otr);
-			start = max(f,front_face_dist[otr]);
-			final = back_face_dist[otr];
-			f=final;
+		ps = ps + step*(1.0+rand(vec4(vertex,ps.w)));
+		vec3 step1;
+		step1.x=(rand(vec4(vertex,ps.x))-0.5)*step_length;
+		step1.y=(rand(vec4(ps.z,vertex.xz,ps.x))-0.5)*step_length;
+		step1.z=(rand(vec4(ps.y,vertex))-0.5)*step_length;
+		
+		step1+=LightDir*step_length*1.1;
+		
 			
-			if(final<=start)break;
-			
-			start = max(start,start0);
-			final = min(final,final0);
-#endif
-		
-			ps = ps0 + step*(start/step_length);
-		
-			ps = ps + step*(1.0+rand(vec4(vertex,ps.w)));
-			id=1;
-			sampler3D tex[2];
-			tex[0] = f_text1;
-			tex[1] = f_text2;
-			while(ps.w <final)
+			for ( float itt = 0.0; itt < float ( 512.0 ); itt+=1.0 )
 			{
+				if(ps.w >=final)break;
+				//alpha+=0.1;
 			
-				for(id=0;id<2;id++)
+				//for(id=0;id<1;id++)
 				//if(inter[id])
 				
-				{
-					e0[id] = Equ(ps.xyz,id,tex[id]);
-					e[id] = ((e0[id]-min_level[id])/(max_level[id]-min_level[id]));
-					if(e[id]>0.0)
-					{
-						#if 1==0
-						cl =  vec4(e[id]);
-						#endif
-						#if 1==1
+					e0[id] = Equ(ps.xyz,id,f_text1);
+					//if(e0[id] == clamp(e0[id],tf_ww[id].x,tf_ww.y)
+					
 						cl =  GetLevelColor(e0[id],id);
-						#endif
 						cl.w *= ddd*opacity[id];
 						#if 0==1
-							norm = normalize(GradEqu1(e0[id],ps.xyz,id,tex[id])+vec3(0.000001));
+							norm = normalize(GradEqu1(e0[id],ps.xyz,id,f_text1)+vec3(0.000001));
 							//cl.xyz = mix(Phong(ps.xyz,-norm,cl.xyz),Phong(ps.xyz,nrm,cl.xyz),max(start-ps.w+0.02,0.0)/0.02);
 							if(dot(norm,ray)<0)norm=-norm;
 							cl.xyz = Phong(ps.xyz,-norm,cl.xyz);
 						#endif
 						float d_alpha = (1.0-alpha) * cl.w;
 						//if(alpha==0.0 && d_alpha!=0.0)gl_FragDepth = max(GetDepth(ps.xyz),0.1);
-						mid_t += d_alpha*ps.w;
+						//mid_t += d_alpha*ps.w;
+						if(d_alpha>ddd*0.005)
+							cl.xyz = cl.xyz*(1.0-GetShadness1(ps.xyz,step1));
 						color = color + d_alpha * cl.xyz;
 						
 						alpha = alpha + d_alpha;
+					
+					
+						#if 1>1
+				id=1;
+					e0[id] = Equ(ps.xyz,id,f_text2);
+					//if(e0[id] == clamp(e0[id],tf_ww[id].x,tf_ww.y)
+					
+						cl =  GetLevelColor(e0[id],id);
+						cl.w *= ddd*opacity[id];
+						#if 0==1
+							norm = normalize(GradEqu1(e0[id],ps.xyz,id,f_text2)+vec3(0.000001));
+							//cl.xyz = mix(Phong(ps.xyz,-norm,cl.xyz),Phong(ps.xyz,nrm,cl.xyz),max(start-ps.w+0.02,0.0)/0.02);
+							if(dot(norm,ray)<0)norm=-norm;
+							cl.xyz = Phong(ps.xyz,-norm,cl.xyz);
+						#endif
+						d_alpha = (1.0-alpha) * cl.w;
+						//if(alpha==0.0 && d_alpha!=0.0)gl_FragDepth = max(GetDepth(ps.xyz),0.1);
+						//mid_t += d_alpha*ps.w;
+						color = color + d_alpha * cl.xyz;
 						
-					}
-					if(alpha>0.95)
+						alpha = alpha + d_alpha;
+				id=0;
+				#endif
+				
+						if(alpha>0.95)
 						{
 							alpha=1.0;
 							break;
 						}
-						
-				}
-				
-				
-				
 				ps += step;
 			}
 			
-#if 0!=0
-			if(alpha==1.0)break;
-		}
-#endif		
-		
+		//color = color*(1.0-GetShadness(ps.xyz));
 		//		color.x = texture2D(front_dist_txt,text_coord).x;
 	//	color.y = texture2D(back_dist_txt,text_coord).x;
 //		gl_FragDepth = max(GetDepth(ps0.xyz + min(ps.w,step.xyz*(mid_t/step_length))),0.1);
